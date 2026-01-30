@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon GO Buddy Walking Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .calculator {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #ee1515;
+            text-align: center;
+        }
+        h2 {
+            color: #3b4cca;
+            margin-top: 30px;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        .toggle-option {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .toggle-option.active {
+            background-color: #3b4cca;
+            color: white;
+            border-color: #3b4cca;
+        }
+        .toggle-option:hover {
+            border-color: #3b4cca;
+        }
+        button {
+            background-color: #ee1515;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+        }
+        button:hover {
+            background-color: #cc0000;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f0f8ff;
+            border-radius: 5px;
+            border-left: 4px solid #3b4cca;
+        }
+        .result-item {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .result-value {
+            font-weight: bold;
+            color: #ee1515;
+        }
+        .explanation {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #3b4cca;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .formula {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Pokémon GO Buddy Walking Calculator</h1>
+    
+    <div class="calculator">
+        <h2>Calculate Your Candy & XL Candy</h2>
+        
+        <div class="input-group">
+            <label for="startLevel">Starting Level:</label>
+            <input type="number" id="startLevel" min="1" max="49" value="1">
+        </div>
+        
+        <div class="input-group">
+            <label for="endLevel">Target Level:</label>
+            <input type="number" id="endLevel" min="2" max="50" value="40">
+        </div>
+        
+        <div class="input-group">
+            <label>Pokémon Type:</label>
+            <div class="toggle-group">
+                <div class="toggle-option active" onclick="setPokemonType('regular')">Regular</div>
+                <div class="toggle-option" onclick="setPokemonType('shadow')">Shadow</div>
+                <div class="toggle-option" onclick="setPokemonType('purified')">Purified</div>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="buddyDistance">Buddy Distance (km):</label>
+            <select id="buddyDistance">
+                <option value="1">1 km (Common Pokémon)</option>
+                <option value="3" selected>3 km (Most Pokémon)</option>
+                <option value="5">5 km (Rare Pokémon)</option>
+                <option value="20">20 km (Legendary/Mythical)</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <label for="startingCandy">Starting Regular Candy:</label>
+            <input type="number" id="startingCandy" min="0" value="0">
+        </div>
+        
+        <div class="input-group">
+            <label for="startingXL">Starting XL Candy:</label>
+            <input type="number" id="startingXL" min="0" value="0">
+        </div>
+        
+        <button onclick="calculate()">Calculate</button>
+        
+        <div id="results" style="display:none;" class="results">
+            <h3>Results:</h3>
+            <div class="result-item">Total Distance to Walk: <span class="result-value" id="totalDistance"></span> km</div>
+            <div class="result-item">Regular Candy Earned: <span class="result-value" id="candyEarned"></span></div>
+            <div class="result-item">XL Candy Earned: <span class="result-value" id="xlEarned"></span></div>
+            <div class="result-item">Regular Candy Spent: <span class="result-value" id="candySpent"></span></div>
+            <div class="result-item">XL Candy Spent: <span class="result-value" id="xlSpent"></span></div>
+            <div class="result-item">Final Regular Candy: <span class="result-value" id="finalCandy"></span></div>
+            <div class="result-item">Final XL Candy: <span class="result-value" id="finalXL"></span></div>
+        </div>
+    </div>
+    
+    <div class="explanation">
+        <h2>Strategy Explanation</h2>
+        <p>This calculator uses the <strong>"Walk and Level Up"</strong> strategy, where you walk your buddy Pokémon and power it up whenever you have enough candy to reach the next level. This approach is efficient because:</p>
+        <ul>
+            <li>As your buddy levels up, the XL Candy drop rate increases</li>
+            <li>Higher level buddies (especially 31+) have significantly better XL Candy rates (~70-80%)</li>
+            <li>You maximize XL Candy gains by keeping your buddy at the highest possible level during the walk</li>
+        </ul>
+        
+        <h2>XL Candy Probability Formula</h2>
+        <p>Based on available data, the XL Candy drop rate follows an approximate logistic (S-curve) function:</p>
+        <div class="formula">
+P(XL Candy) ≈ 0.80 / (1 + e^(-0.15 × (Level - 25)))
+        </div>
+        <p><strong>Reasoning:</strong></p>
+        <ul>
+            <li>At Level 20: ~25% chance</li>
+            <li>At Level 31: ~70% chance</li>
+            <li>At Level 31+: Plateaus at ~80% chance</li>
+            <li>The logistic function models the gradual increase at lower levels and the plateau at higher levels</li>
+        </ul>
+
+    </div>
+
+    <script>
+        let pokemonType = 'regular';
+        
+        function setPokemonType(type) {
+            pokemonType = type;
+            document.querySelectorAll('.toggle-option').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+        
+        function getXLProbability(level) {
+            return 0.80 / (1 + Math.exp(-0.15 * (level - 25)));
+        }
+        
+        function getTotalCandyForLevel(level, type) {
+            if (level < 1 || level > 39.5) return 0;
+            
+            let baseCost;
+            if (level < 11) {
+                baseCost = 1;
+              } else if (level < 21) {
+                baseCost = 2;
+              } else if (level < 25) {
+                baseCost = 3;
+              } else if (level < 26) {
+                baseCost = 3;
+              } else if (level < 31) {
+                baseCost = 4;
+              } else if (level < 33) {
+                baseCost = 6;
+              } else if (level < 35) {
+                baseCost = 8;
+              } else if (level < 37) {
+                baseCost = 10;
+              } else if (level < 39) {
+                baseCost = 12;
+              } else if (level < 40) {
+                baseCost = 15;
+              }
+            
+            if (type === 'shadow') {
+                baseCost = Math.ceil(baseCost * 1.2);
+            } else if (type === 'purified') {
+                baseCost = Math.ceil(baseCost * 0.9);
+            }
+            
+            return baseCost * 2;
+        }
+        
+        function getTotalXLForLevel(level, type) {
+            if (level < 40 || level > 50) return 0;
+            
+            let baseCost;
+            if (level >= 40 && level < 42) {
+                baseCost = 10;
+              } else if (level >= 42 && level < 44) {
+                baseCost = 12;
+              } else if (level >= 44 && level < 46) {
+                baseCost = 15;
+              } else if (level >= 46 && level < 48) {
+                baseCost = 17;
+              } else if (level >= 48) {
+                baseCost = 20;
+            }
+            
+            if (type === 'shadow') {
+                baseCost = Math.ceil(baseCost * 1.2);
+            }
+	    else if (type == 'purified') {
+                baseCost = Math.ceil(baseCost * 0.9);
+            }
+            
+            
+            return baseCost * 2;
+        }
+        
+        function calculate() {
+            const startLevel = parseInt(document.getElementById('startLevel').value);
+            const endLevel = parseInt(document.getElementById('endLevel').value);
+            const buddyDistance = parseFloat(document.getElementById('buddyDistance').value);
+            let regularCandy = parseInt(document.getElementById('startingCandy').value);
+            let xlCandy = parseInt(document.getElementById('startingXL').value);
+            
+            if (startLevel >= endLevel) {
+                alert('Target level must be higher than starting level!');
+                return;
+            }
+            
+            let totalDistance = 0;
+            let totalCandyEarned = 0;
+            let totalXLEarned = 0;
+            let totalCandySpent = 0;
+            let totalXLSpent = 0;
+            let currentLevel = startLevel;
+            
+            while (currentLevel < endLevel) {
+                const candyNeeded = getTotalCandyForLevel(currentLevel, pokemonType);
+                const xlNeeded = getTotalXLForLevel(currentLevel, pokemonType);
+
+                while (regularCandy < candyNeeded || xlCandy < xlNeeded) {
+                    totalDistance += buddyDistance;
+                    regularCandy += 1;
+                    totalCandyEarned += 1;
+                    
+                    const xlProb = getXLProbability(currentLevel);
+                    if (Math.random() < xlProb) {
+                        xlCandy += 1;
+                        totalXLEarned += 1;
+                    }
+		}
+                regularCandy -= candyNeeded;
+                totalCandySpent += candyNeeded;
+		xlCandy -= xlNeeded;
+                totalXLSpent += xlNeeded;
+                
+                currentLevel++;
+            }
+            
+            document.getElementById('totalDistance').textContent = totalDistance.toFixed(1);
+            document.getElementById('candyEarned').textContent = totalCandyEarned;
+            document.getElementById('xlEarned').textContent = totalXLEarned;
+            document.getElementById('candySpent').textContent = totalCandySpent;
+            document.getElementById('xlSpent').textContent = totalXLSpent;
+            document.getElementById('finalCandy').textContent = regularCandy;
+            document.getElementById('finalXL').textContent = xlCandy;
+            document.getElementById('results').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
