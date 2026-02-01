@@ -241,18 +241,59 @@
             <li>You maximize XL Candy gains by keeping your buddy at the highest possible level during the walk</li>
         </ul>
         
-        <h2>XL Candy Probability Formula</h2>
-        <p>Based on available data, the XL Candy drop rate follows an approximate logistic (S-curve) function:</p>
-        <div class="formula">
-P(XL Candy) ≈ 0.80 / (1 + e^(-0.15 × (Level - 25)))
-        </div>
-        <p><strong>Reasoning:</strong></p>
-        <ul>
-            <li>At Level 20: ~25% chance</li>
-            <li>At Level 31: ~70% chance</li>
-            <li>At Level 31+: Plateaus at ~80% chance</li>
-            <li>The logistic function models the gradual increase at lower levels and the plateau at higher levels</li>
-        </ul>
+        <h2>XL Candy Probability from Buddy Walking</h2>
+        <p>Research from <a href="https://web.archive.org/web/20210620222420/https://thesilphroad.com/science/guide-candy-xl-part-3-transferring" target="_blank">The Silph Road</a> determined the XL Candy drop rates from transferring Pokémon based on their level. A <a href="https://web.archive.org/web/20230202151113/https://thesilphroad.com/science/quick-discovery/early-look-buddy-candy-xl-rates" target="_blank">follow-up study</a> found that buddy walking appears to use the same rate formula. The probability increases with Pokémon level as shown below:</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Pokémon Level</th>
+                    <th>Sample Size</th>
+                    <th>Observed Rate</th>
+                    <th>Probability</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Levels 1-14</td>
+                    <td>8,363</td>
+                    <td>0.027 ± 0.003</td>
+                    <td>1/40</td>
+                </tr>
+                <tr>
+                    <td>Levels 15-19</td>
+                    <td>3,552</td>
+                    <td>0.13 ± 0.01</td>
+                    <td>1/8</td>
+                </tr>
+                <tr>
+                    <td>Levels 20-22</td>
+                    <td>2,512</td>
+                    <td>0.25 ± 0.02</td>
+                    <td>2/8</td>
+                </tr>
+                <tr>
+                    <td>Levels 23-25</td>
+                    <td>1,994</td>
+                    <td>0.39 ± 0.02</td>
+                    <td>3/8</td>
+                </tr>
+                <tr>
+                    <td>Levels 26-30</td>
+                    <td>3,425</td>
+                    <td>0.48 ± 0.02</td>
+                    <td>4/8</td>
+                </tr>
+                <tr>
+                    <td>Levels 31-35</td>
+                    <td>1,031</td>
+                    <td>0.76 ± 0.03</td>
+                    <td>6/8</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p>This calculator uses these empirically-determined probabilities to estimate XL Candy gains from buddy walking.</p>
 
     </div>
 
@@ -266,7 +307,12 @@ P(XL Candy) ≈ 0.80 / (1 + e^(-0.15 × (Level - 25)))
         }
         
         function getXLProbability(level) {
-            return 0.80 / (1 + Math.exp(-0.15 * (level - 25)));
+            if (level <= 14) return 1/40;
+            if (level <= 19) return 1/8;
+            if (level <= 22) return 2/8;
+            if (level <= 25) return 3/8;
+            if (level <= 30) return 4/8;
+            return 6/8;
         }
         
         function getTotalCandyForLevel(level, type) {
