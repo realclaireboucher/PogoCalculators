@@ -23,7 +23,7 @@
             transform: translateY(-50%);
             width: 400px;
             height: 400px;
-            background-image: url('volcarona.jpg');
+            background-image: url('images/volcarona.jpg');
             background-size: contain;
             background-repeat: no-repeat;
             opacity: 0.15;
@@ -37,7 +37,7 @@
             left: 20px;
             width: 80px;
             height: 80px;
-            background-image: url('volcasprite.png');
+            background-image: url('images/volcasprite.png');
             background-size: contain;
             background-repeat: no-repeat;
             z-index: 0;
@@ -84,6 +84,13 @@
             border-radius: 5px;
             font-size: 16px;
             box-sizing: border-box;
+        }
+        #buddyDistance {
+            background-image: url('images/blazikensprite.gif');
+            background-repeat: no-repeat;
+            background-position: 10px center;
+            background-size: 24px 24px;
+            padding-left: 45px;
         }
         .toggle-group {
             display: flex;
@@ -300,6 +307,17 @@
     <script>
         let pokemonType = 'regular';
         
+        const spriteMap = {
+            '1': 'images/gyaradossprite.png',
+            '3': 'images/blazikensprite.gif',
+            '5': 'images/volcasprite.png',
+            '20': 'images/zygardesprite.png'
+        };
+        
+        document.getElementById('buddyDistance').addEventListener('change', function() {
+            this.style.backgroundImage = `url('${spriteMap[this.value]}')`;
+        });
+        
         function setPokemonType(type) {
             pokemonType = type;
             document.querySelectorAll('.toggle-option').forEach(el => el.classList.remove('active'));
@@ -381,8 +399,8 @@
             const startLevel = parseInt(document.getElementById('startLevel').value);
             const endLevel = parseInt(document.getElementById('endLevel').value);
             const buddyDistance = parseFloat(document.getElementById('buddyDistance').value);
-            let regularCandy = parseInt(document.getElementById('startingCandy').value);
-            let xlCandy = parseInt(document.getElementById('startingXL').value);
+            let regularCandy = parseInt(document.getElementById('startingCandy').value) || 0;
+            let xlCandy = parseInt(document.getElementById('startingXL').value) || 0;
             
             if (startLevel >= endLevel) {
                 alert('Target level must be higher than starting level!');
