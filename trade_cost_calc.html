@@ -1,0 +1,2552 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pokémon GO Trade Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #e3350d;
+            margin-bottom: 30px;
+        }
+
+        .trade-sides {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .trade-side {
+            flex: 1;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .trade-side:hover {
+            border-color: #e3350d;
+            box-shadow: 0 2px 15px rgba(227, 53, 13, 0.1);
+        }
+
+        h3 {
+            color: #e3350d;
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f2f5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus {
+            border-color: #e3350d;
+            outline: none;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #e3350d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #cc2f0b;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+
+        #pokemonImage {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 20px;
+        }
+        .friendship-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pokémon GO Trade Calculator</h1>
+        
+        <div class="trade-sides">
+            <div class="trade-side">
+                <h3>Your Pokémon</h3>
+                <div class="form-group">
+                    <label for="item1">Select Pokémon:</label>
+                    <select id="item1" onchange="updatePokemonImage(this, 'pokemonImage1')"></select>
+                </div>
+                <img id="pokemonImage1" src="" alt="Selected Pokémon">
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="registered1">
+                    <label for="registered1">Pokémon is Registered</label>
+                </div>
+            </div>
+
+            <div class="trade-side">
+                <h3>Their Pokémon</h3>
+                <div class="form-group">
+                    <label for="item2">Select Pokémon:</label>
+                    <select id="item2" onchange="updatePokemonImage(this, 'pokemonImage2')"></select>
+                </div>
+                <img id="pokemonImage2" src="" alt="Selected Pokémon">
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="registered2">
+                    <label for="registered2">Pokémon is Registered</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="friendship-section">
+            <div class="form-group">
+                <label for="friendship">Friendship Level:</label>
+                <select id="friendship">
+                    <option value="1.0">Stranger (No Discount)</option>
+                    <option value="0.8">Great Friend (20% Off)</option>
+                    <option value="0.08">Ultra Friend (92% Off)</option>
+                    <option value="0.04">Best Friend (96% Off)</option>
+                </select>
+            </div>
+        </div>
+
+        <button onclick="calculateTrade()">Calculate Trade Cost</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Your existing JavaScript remains the same
+      const pokemonData = `1,Bulbasaur,false,false
+1,Bulbasaur (Shiny),false,true
+2,Ivysaur,false,false
+2,Ivysaur (Shiny),false,true
+3,Venusaur,false,false
+3,Venusaur (Shiny),false,true
+3,Venusaur (Gigantamax),false,false,true
+3,Venusaur (Gigantamax Shiny),false,true,true
+4,Charmander,false,false
+4,Charmander (Shiny),false,true
+5,Charmeleon,false,false
+5,Charmeleon (Shiny),false,true
+6,Charizard,false,false
+6,Charizard (Shiny),false,true
+6,Charizard (Gigantamax),false,false,true
+6,Charizard (Gigantamax Shiny),false,true,true
+7,Squirtle,false,false
+7,Squirtle (Shiny),false,true
+8,Wartortle,false,false
+8,Wartortle (Shiny),false,true
+9,Blastoise,false,false
+9,Blastoise (Shiny),false,true
+9,Blastoise (Gigantamax),false,false,true
+9,Blastoise (Gigantamax Shiny),false,true,true
+10,Caterpie,false,false
+10,Caterpie (Shiny),false,true
+11,Metapod,false,false
+11,Metapod (Shiny),false,true
+12,Butterfree,false,false
+12,Butterfree (Shiny),false,true
+12,Butterfree (Gigantamax),false,false,true
+12,Butterfree (Gigantamax Shiny),false,true,true
+13,Weedle,false,false
+13,Weedle (Shiny),false,true
+14,Kakuna,false,false
+14,Kakuna (Shiny),false,true
+15,Beedrill,false,false
+15,Beedrill (Shiny),false,true
+16,Pidgey,false,false
+16,Pidgey (Shiny),false,true
+17,Pidgeotto,false,false
+17,Pidgeotto (Shiny),false,true
+18,Pidgeot,false,false
+18,Pidgeot (Shiny),false,true
+19,Rattata,false,false
+19,Rattata (Shiny),false,true
+19,Rattata (Alolan),false,false
+19,Rattata (Alolan Shiny),false,true
+20,Raticate,false,false
+20,Raticate (Shiny),false,true
+20,Raticate (Alolan),false,false
+20,Raticate (Alolan Shiny),false,true
+21,Spearow,false,false
+22,Fearow,false,false
+23,Ekans,false,false
+23,Ekans (Shiny),false,true
+24,Arbok,false,false
+24,Arbok (Shiny),false,true
+25,Pikachu,false,false
+25,Pikachu (Shiny),false,true
+25,Pikachu (Gigantamax),false,false,true
+25,Pikachu (Gigantamax Shiny),false,true,true
+26,Raichu,false,false
+26,Raichu (Shiny),false,true
+26,Raichu (Alolan),false,false
+26,Raichu (Alolan Shiny),false,true
+27,Sandshrew,false,false
+27,Sandshrew (Shiny),false,true
+27,Sandshrew (Alolan),false,false
+27,Sandshrew (Alolan Shiny),false,true
+28,Sandslash,false,false
+28,Sandslash (Shiny),false,true
+28,Sandslash (Alolan),false,false
+28,Sandslash (Alolan Shiny),false,true
+29,Nidoran♀,false,false
+29,Nidoran♀ (Shiny),false,true
+30,Nidorina,false,false
+30,Nidorina (Shiny),false,true
+31,Nidoqueen,false,false
+31,Nidoqueen (Shiny),false,true
+32,Nidoran♂,false,false
+32,Nidoran♂ (Shiny),false,true
+33,Nidorino,false,false
+33,Nidorino (Shiny),false,true
+34,Nidoking,false,false
+34,Nidoking (Shiny),false,true
+35,Clefairy,false,false
+35,Clefairy (Shiny),false,true
+36,Clefable,false,false
+36,Clefable (Shiny),false,true
+37,Vulpix,false,false
+37,Vulpix (Shiny),false,true
+37,Vulpix (Alolan),false,false
+37,Vulpix (Alolan Shiny),false,true
+38,Ninetales,false,false
+38,Ninetales (Shiny),false,true
+38,Ninetales (Alolan),false,false
+38,Ninetales (Alolan Shiny),false,true
+39,Jigglypuff,false,false
+39,Jigglypuff (Shiny),false,true
+40,Wigglytuff,false,false
+40,Wigglytuff (Shiny),false,true
+41,Zubat,false,false
+41,Zubat (Shiny),false,true
+42,Golbat,false,false
+42,Golbat (Shiny),false,true
+43,Oddish,false,false
+43,Oddish (Shiny),false,true
+44,Gloom,false,false
+44,Gloom (Shiny),false,true
+45,Vileplume,false,false
+45,Vileplume (Shiny),false,true
+46,Paras,false,false
+47,Parasect,false,false
+48,Venonat,false,false
+48,Venonat (Shiny),false,true
+49,Venomoth,false,false
+49,Venomoth (Shiny),false,true
+50,Diglett,false,false
+50,Diglett (Shiny),false,true
+50,Diglett (Alolan),false,false
+50,Diglett (Alolan Shiny),false,true
+51,Dugtrio,false,false
+51,Dugtrio (Shiny),false,true
+51,Dugtrio (Alolan),false,false
+51,Dugtrio (Alolan Shiny),false,true
+52,Meowth,false,false
+52,Meowth (Shiny),false,true
+52,Meowth (Alolan),false,false
+52,Meowth (Alolan Shiny),false,true
+52,Meowth (Galarian),false,false
+52,Meowth (Galarian Shiny),false,true
+52,Meowth (Gigantamax),false,false,true
+52,Meowth (Gigantamax Shiny),false,true,true
+53,Persian,false,false
+53,Persian (Shiny),false,true
+53,Persian (Alolan),false,false
+53,Persian (Alolan Shiny),false,true
+54,Psyduck,false,false
+54,Psyduck (Shiny),false,true
+55,Golduck,false,false
+55,Golduck (Shiny),false,true
+56,Mankey,false,false
+56,Mankey (Shiny),false,true
+57,Primeape,false,false
+57,Primeape (Shiny),false,true
+58,Growlithe,false,false
+58,Growlithe (Shiny),false,true
+58,Growlithe (Hisuian),false,false
+58,Growlithe (Hisuian Shiny),false,true
+59,Arcanine,false,false
+59,Arcanine (Shiny),false,true
+59,Arcanine (Hisuian),false,false
+59,Arcanine (Hisuian Shiny),false,true
+60,Poliwag,false,false
+60,Poliwag (Shiny),false,true
+61,Poliwhirl,false,false
+61,Poliwhirl (Shiny),false,true
+62,Poliwrath,false,false
+62,Poliwrath (Shiny),false,true
+63,Abra,false,false
+63,Abra (Shiny),false,true
+64,Kadabra,false,false
+64,Kadabra (Shiny),false,true
+65,Alakazam,false,false
+65,Alakazam (Shiny),false,true
+66,Machop,false,false
+66,Machop (Shiny),false,true
+67,Machoke,false,false
+67,Machoke (Shiny),false,true
+68,Machamp,false,false
+68,Machamp (Shiny),false,true
+68,Machamp (Gigantamax),false,false,true
+68,Machamp (Gigantamax Shiny),false,true,true
+69,Bellsprout,false,false
+69,Bellsprout (Shiny),false,true
+70,Weepinbell,false,false
+70,Weepinbell (Shiny),false,true
+71,Victreebel,false,false
+71,Victreebel (Shiny),false,true
+72,Tentacool,false,false
+72,Tentacool (Shiny),false,true
+73,Tentacruel,false,false
+73,Tentacruel (Shiny),false,true
+74,Geodude,false,false
+74,Geodude (Shiny),false,true
+74,Geodude (Alolan),false,false
+74,Geodude (Alolan Shiny),false,true
+75,Graveler,false,false
+75,Graveler (Shiny),false,true
+75,Graveler (Alolan),false,false
+75,Graveler (Alolan Shiny),false,true
+76,Golem,false,false
+76,Golem (Shiny),false,true
+76,Golem (Alolan),false,false
+76,Golem (Alolan Shiny),false,true
+77,Ponyta,false,false
+77,Ponyta (Shiny),false,true
+77,Ponyta (Galarian),false,false
+77,Ponyta (Galarian Shiny),false,true
+78,Rapidash,false,false
+78,Rapidash (Shiny),false,true
+78,Rapidash (Galarian),false,false
+78,Rapidash (Galarian Shiny),false,true
+79,Slowpoke,false,false
+79,Slowpoke (Shiny),false,true
+79,Slowpoke (Galarian),false,false
+79,Slowpoke (Galarian Shiny),false,true
+80,Slowbro,false,false
+80,Slowbro (Shiny),false,true
+80,Slowbro (Galarian),false,false
+80,Slowbro (Galarian Shiny),false,true
+81,Magnemite,false,false
+81,Magnemite (Shiny),false,true
+82,Magneton,false,false
+82,Magneton (Shiny),false,true
+83,Farfetch'd,false,false
+83,Farfetch'd (Shiny),false,true
+83,Farfetch'd (Galarian),false,false
+83,Farfetch'd (Galarian Shiny),false,true
+84,Doduo,false,false
+84,Doduo (Shiny),false,true
+85,Dodrio,false,false
+85,Dodrio (Shiny),false,true
+86,Seel,false,false
+86,Seel (Shiny),false,true
+87,Dewgong,false,false
+87,Dewgong (Shiny),false,true
+88,Grimer,false,false
+88,Grimer (Shiny),false,true
+88,Grimer (Alolan),false,false
+88,Grimer (Alolan Shiny),false,true
+89,Muk,false,false
+89,Muk (Shiny),false,true
+89,Muk (Alolan),false,false
+89,Muk (Alolan Shiny),false,true
+90,Shellder,false,false
+90,Shellder (Shiny),false,true
+91,Cloyster,false,false
+91,Cloyster (Shiny),false,true
+92,Gastly,false,false
+92,Gastly (Shiny),false,true
+93,Haunter,false,false
+93,Haunter (Shiny),false,true
+94,Gengar,false,false
+94,Gengar (Shiny),false,true
+94,Gengar (Gigantamax),false,false,true
+94,Gengar (Gigantamax Shiny),false,true,true
+95,Onix,false,false
+95,Onix (Shiny),false,true
+96,Drowzee,false,false
+96,Drowzee (Shiny),false,true
+97,Hypno,false,false
+97,Hypno (Shiny),false,true
+98,Krabby,false,false
+98,Krabby (Shiny),false,true
+99,Kingler,false,false
+99,Kingler (Shiny),false,true
+99,Kingler (Gigantamax),false,false,true
+99,Kingler (Gigantamax Shiny),false,true,true
+100,Voltorb,false,false
+100,Voltorb (Shiny),false,true
+100,Voltorb (Hisuian),false,false
+100,Voltorb (Hisuian Shiny),false,true
+101,Electrode,false,false
+101,Electrode (Shiny),false,true
+101,Electrode (Hisuian),false,false
+101,Electrode (Hisuian Shiny),false,true
+102,Exeggcute,false,false
+102,Exeggcute (Shiny),false,true
+103,Exeggutor,false,false
+103,Exeggutor (Shiny),false,true
+103,Exeggutor (Alolan),false,false
+103,Exeggutor (Alolan Shiny),false,true
+104,Cubone,false,false
+104,Cubone (Shiny),false,true
+105,Marowak,false,false
+105,Marowak (Shiny),false,true
+105,Marowak (Alolan),false,false
+105,Marowak (Alolan Shiny),false,true
+106,Hitmonlee,false,false
+106,Hitmonlee (Shiny),false,true
+107,Hitmonchan,false,false
+107,Hitmonchan (Shiny),false,true
+108,Lickitung,false,false
+108,Lickitung (Shiny),false,true
+109,Koffing,false,false
+109,Koffing (Shiny),false,true
+110,Weezing,false,false
+110,Weezing (Shiny),false,true
+110,Weezing (Galarian),false,false
+110,Weezing (Galarian Shiny),false,true
+111,Rhyhorn,false,false
+111,Rhyhorn (Shiny),false,true
+112,Rhydon,false,false
+112,Rhydon (Shiny),false,true
+113,Chansey,false,false
+113,Chansey (Shiny),false,true
+114,Tangela,false,false
+114,Tangela (Shiny),false,true
+115,Kangaskhan,false,false
+115,Kangaskhan (Shiny),false,true
+116,Horsea,false,false
+116,Horsea (Shiny),false,true
+117,Seadra,false,false
+117,Seadra (Shiny),false,true
+118,Goldeen,false,false
+118,Goldeen (Shiny),false,true
+119,Seaking,false,false
+119,Seaking (Shiny),false,true
+120,Staryu,false,false
+120,Staryu (Shiny),false,true
+121,Starmie,false,false
+121,Starmie (Shiny),false,true
+122,Mr. Mime,false,false
+122,Mr. Mime (Shiny),false,true
+122,Mr. Mime (Galarian),false,false
+122,Mr. Mime (Galarian Shiny),false,true
+123,Scyther,false,false
+123,Scyther (Shiny),false,true
+124,Jynx,false,false
+124,Jynx (Shiny),false,true
+125,Electabuzz,false,false
+125,Electabuzz (Shiny),false,true
+126,Magmar,false,false
+126,Magmar (Shiny),false,true
+127,Pinsir,false,false
+127,Pinsir (Shiny),false,true
+128,Tauros,false,false
+128,Tauros (Shiny),false,true
+129,Magikarp,false,false
+129,Magikarp (Shiny),false,true
+130,Gyarados,false,false
+130,Gyarados (Shiny),false,true
+131,Lapras,false,false
+131,Lapras (Shiny),false,true
+131,Lapras (Gigantamax),false,false,true
+131,Lapras (Gigantamax Shiny),false,true,true
+132,Ditto,false,false
+132,Ditto (Shiny),false,true
+133,Eevee,false,false
+133,Eevee (Shiny),false,true
+133,Eevee (Gigantamax),false,false,true
+133,Eevee (Gigantamax Shiny),false,true,true
+134,Vaporeon,false,false
+134,Vaporeon (Shiny),false,true
+135,Jolteon,false,false
+135,Jolteon (Shiny),false,true
+136,Flareon,false,false
+136,Flareon (Shiny),false,true
+137,Porygon,false,false
+137,Porygon (Shiny),false,true
+138,Omanyte,false,false
+138,Omanyte (Shiny),false,true
+139,Omastar,false,false
+139,Omastar (Shiny),false,true
+140,Kabuto,false,false
+140,Kabuto (Shiny),false,true
+141,Kabutops,false,false
+141,Kabutops (Shiny),false,true
+142,Aerodactyl,false,false
+142,Aerodactyl (Shiny),false,true
+143,Snorlax,false,false
+143,Snorlax (Shiny),false,true
+143,Snorlax (Gigantamax),false,false,true
+143,Snorlax (Gigantamax Shiny),false,true,true
+144,Articuno,true,false
+144,Articuno (Shiny),true,true
+144,Articuno (Galarian),true,false
+144,Articuno (Galarian Shiny),true,true
+145,Zapdos,true,false
+145,Zapdos (Shiny),true,true
+145,Zapdos (Galarian),true,false
+145,Zapdos (Galarian Shiny),true,true
+146,Moltres,true,false
+146,Moltres (Shiny),true,true
+146,Moltres (Galarian),true,false
+146,Moltres (Galarian Shiny),true,true
+147,Dratini,false,false
+147,Dratini (Shiny),false,true
+148,Dragonair,false,false
+148,Dragonair (Shiny),false,true
+149,Dragonite,false,false
+149,Dragonite (Shiny),false,true
+150,Mewtwo,true,false
+150,Mewtwo (Shiny),true,true
+151,Mew,true,false
+151,Mew (Shiny),true,true
+152,Chikorita,false,false
+152,Chikorita (Shiny),false,true
+153,Bayleef,false,false
+153,Bayleef (Shiny),false,true
+154,Meganium,false,false
+154,Meganium (Shiny),false,true
+155,Cyndaquil,false,false
+155,Cyndaquil (Shiny),false,true
+156,Quilava,false,false
+156,Quilava (Shiny),false,true
+157,Typhlosion,false,false
+157,Typhlosion (Shiny),false,true
+157,Typhlosion (Hisuian),false,false
+157,Typhlosion (Hisuian Shiny),false,true
+158,Totodile,false,false
+158,Totodile (Shiny),false,true
+159,Croconaw,false,false
+159,Croconaw (Shiny),false,true
+160,Feraligatr,false,false
+160,Feraligatr (Shiny),false,true
+161,Sentret,false,false
+161,Sentret (Shiny),false,true
+162,Furret,false,false
+162,Furret (Shiny),false,true
+163,Hoothoot,false,false
+163,Hoothoot (Shiny),false,true
+164,Noctowl,false,false
+164,Noctowl (Shiny),false,true
+165,Ledyba,false,false
+165,Ledyba (Shiny),false,true
+166,Ledian,false,false
+166,Ledian (Shiny),false,true
+167,Spinarak,false,false
+167,Spinarak (Shiny),false,true
+168,Ariados,false,false
+168,Ariados (Shiny),false,true
+169,Crobat,false,false
+169,Crobat (Shiny),false,true
+170,Chinchou,false,false
+170,Chinchou (Shiny),false,true
+171,Lanturn,false,false
+171,Lanturn (Shiny),false,true
+172,Pichu,false,false
+172,Pichu (Shiny),false,true
+173,Cleffa,false,false
+173,Cleffa (Shiny),false,true
+174,Igglybuff,false,false
+174,Igglybuff (Shiny),false,true
+175,Togepi,false,false
+175,Togepi (Shiny),false,true
+176,Togetic,false,false
+176,Togetic (Shiny),false,true
+177,Natu,false,false
+177,Natu (Shiny),false,true
+178,Xatu,false,false
+178,Xatu (Shiny),false,true
+179,Mareep,false,false
+179,Mareep (Shiny),false,true
+180,Flaaffy,false,false
+180,Flaaffy (Shiny),false,true
+181,Ampharos,false,false
+181,Ampharos (Shiny),false,true
+182,Bellossom,false,false
+182,Bellossom (Shiny),false,true
+183,Marill,false,false
+183,Marill (Shiny),false,true
+184,Azumarill,false,false
+184,Azumarill (Shiny),false,true
+185,Sudowoodo,false,false
+185,Sudowoodo (Shiny),false,true
+186,Politoed,false,false
+186,Politoed (Shiny),false,true
+187,Hoppip,false,false
+187,Hoppip (Shiny),false,true
+188,Skiploom,false,false
+188,Skiploom (Shiny),false,true
+189,Jumpluff,false,false
+189,Jumpluff (Shiny),false,true
+190,Aipom,false,false
+190,Aipom (Shiny),false,true
+191,Sunkern,false,false
+191,Sunkern (Shiny),false,true
+192,Sunflora,false,false
+192,Sunflora (Shiny),false,true
+193,Yanma,false,false
+193,Yanma (Shiny),false,true
+194,Wooper,false,false
+194,Wooper (Shiny),false,true
+195,Quagsire,false,false
+195,Quagsire (Shiny),false,true
+196,Espeon,false,false
+196,Espeon (Shiny),false,true
+197,Umbreon,false,false
+197,Umbreon (Shiny),false,true
+198,Murkrow,false,false
+198,Murkrow (Shiny),false,true
+199,Slowking,false,false
+199,Slowking (Shiny),false,true
+199,Slowking (Galarian),false,false
+199,Slowking (Galarian Shiny),false,true
+200,Misdreavus,false,false
+200,Misdreavus (Shiny),false,true
+201,Unown,false,false
+201,Unown (Shiny),false,true
+202,Wobbuffet,false,false
+202,Wobbuffet (Shiny),false,true
+203,Girafarig,false,false
+203,Girafarig (Shiny),false,true
+204,Pineco,false,false
+204,Pineco (Shiny),false,true
+205,Forretress,false,false
+205,Forretress (Shiny),false,true
+206,Dunsparce,false,false
+206,Dunsparce (Shiny),false,true
+207,Gligar,false,false
+207,Gligar (Shiny),false,true
+208,Steelix,false,false
+208,Steelix (Shiny),false,true
+209,Snubbull,false,false
+209,Snubbull (Shiny),false,true
+210,Granbull,false,false
+210,Granbull (Shiny),false,true
+211,Qwilfish,false,false
+211,Qwilfish (Shiny),false,true
+211,Qwilfish (Hisuian),false,false
+211,Qwilfish (Hisuian Shiny),false,true
+212,Scizor,false,false
+212,Scizor (Shiny),false,true
+213,Shuckle,false,false
+213,Shuckle (Shiny),false,true
+214,Heracross,false,false
+214,Heracross (Shiny),false,true
+215,Sneasel,false,false
+215,Sneasel (Shiny),false,true
+216,Teddiursa,false,false
+216,Teddiursa (Shiny),false,true
+217,Ursaring,false,false
+217,Ursaring (Shiny),false,true
+218,Slugma,false,false
+218,Slugma (Shiny),false,true
+219,Magcargo,false,false
+219,Magcargo (Shiny),false,true
+220,Swinub,false,false
+220,Swinub (Shiny),false,true
+221,Piloswine,false,false
+221,Piloswine (Shiny),false,true
+222,Corsola,false,false
+222,Corsola (Shiny),false,true
+222,Corsola (Galarian),false,false
+222,Corsola (Galarian Shiny),false,true
+223,Remoraid,false,false
+223,Remoraid (Shiny),false,true
+224,Octillery,false,false
+224,Octillery (Shiny),false,true
+225,Delibird,false,false
+225,Delibird (Shiny),false,true
+226,Mantine,false,false
+226,Mantine (Shiny),false,true
+227,Skarmory,false,false
+227,Skarmory (Shiny),false,true
+228,Houndour,false,false
+228,Houndour (Shiny),false,true
+229,Houndoom,false,false
+229,Houndoom (Shiny),false,true
+230,Kingdra,false,false
+230,Kingdra (Shiny),false,true
+231,Phanpy,false,false
+231,Phanpy (Shiny),false,true
+232,Donphan,false,false
+232,Donphan (Shiny),false,true
+233,Porygon2,false,false
+233,Porygon2 (Shiny),false,true
+234,Stantler,false,false
+234,Stantler (Shiny),false,true
+235,Smeargle,false,false
+235,Smeargle (Shiny),false,true
+236,Tyrogue,false,false
+236,Tyrogue (Shiny),false,true
+237,Hitmontop,false,false
+237,Hitmontop (Shiny),false,true
+238,Smoochum,false,false
+238,Smoochum (Shiny),false,true
+239,Elekid,false,false
+239,Elekid (Shiny),false,true
+240,Magby,false,false
+240,Magby (Shiny),false,true
+241,Miltank,false,false
+241,Miltank (Shiny),false,true
+242,Blissey,false,false
+242,Blissey (Shiny),false,true
+243,Raikou,true,false
+243,Raikou (Shiny),true,true
+244,Entei,true,false
+244,Entei (Shiny),true,true
+245,Suicune,true,false
+245,Suicune (Shiny),true,true
+246,Larvitar,false,false
+246,Larvitar (Shiny),false,true
+247,Pupitar,false,false
+247,Pupitar (Shiny),false,true
+248,Tyranitar,false,false
+248,Tyranitar (Shiny),false,true
+249,Lugia,true,false
+249,Lugia (Shiny),true,true
+250,Ho-Oh,true,false
+250,Ho-Oh (Shiny),true,true
+251,Celebi,true,false
+251,Celebi (Shiny),true,true
+252,Treecko,false,false
+252,Treecko (Shiny),false,true
+253,Grovyle,false,false
+253,Grovyle (Shiny),false,true
+254,Sceptile,false,false
+254,Sceptile (Shiny),false,true
+255,Torchic,false,false
+255,Torchic (Shiny),false,true
+256,Combusken,false,false
+256,Combusken (Shiny),false,true
+257,Blaziken,false,false
+257,Blaziken (Shiny),false,true
+258,Mudkip,false,false
+258,Mudkip (Shiny),false,true
+259,Marshtomp,false,false
+259,Marshtomp (Shiny),false,true
+260,Swampert,false,false
+260,Swampert (Shiny),false,true
+261,Poochyena,false,false
+261,Poochyena (Shiny),false,true
+262,Mightyena,false,false
+262,Mightyena (Shiny),false,true
+263,Zigzagoon,false,false
+263,Zigzagoon (Shiny),false,true
+263,Zigzagoon (Galarian),false,false
+263,Zigzagoon (Galarian Shiny),false,true
+264,Linoone,false,false
+264,Linoone (Shiny),false,true
+264,Linoone (Galarian),false,false
+264,Linoone (Galarian Shiny),false,true
+265,Wurmple,false,false
+265,Wurmple (Shiny),false,true
+266,Silcoon,false,false
+266,Silcoon (Shiny),false,true
+267,Beautifly,false,false
+267,Beautifly (Shiny),false,true
+268,Cascoon,false,false
+268,Cascoon (Shiny),false,true
+269,Dustox,false,false
+269,Dustox (Shiny),false,true
+270,Lotad,false,false
+270,Lotad (Shiny),false,true
+271,Lombre,false,false
+271,Lombre (Shiny),false,true
+272,Ludicolo,false,false
+272,Ludicolo (Shiny),false,true
+273,Seedot,false,false
+273,Seedot (Shiny),false,true
+274,Nuzleaf,false,false
+274,Nuzleaf (Shiny),false,true
+275,Shiftry,false,false
+275,Shiftry (Shiny),false,true
+276,Taillow,false,false
+276,Taillow (Shiny),false,true
+277,Swellow,false,false
+277,Swellow (Shiny),false,true
+278,Wingull,false,false
+278,Wingull (Shiny),false,true
+279,Pelipper,false,false
+279,Pelipper (Shiny),false,true
+280,Ralts,false,false
+280,Ralts (Shiny),false,true
+281,Kirlia,false,false
+281,Kirlia (Shiny),false,true
+282,Gardevoir,false,false
+282,Gardevoir (Shiny),false,true
+283,Surskit,false,false
+283,Surskit (Shiny),false,true
+284,Masquerain,false,false
+284,Masquerain (Shiny),false,true
+285,Shroomish,false,false
+285,Shroomish (Shiny),false,true
+286,Breloom,false,false
+286,Breloom (Shiny),false,true
+287,Slakoth,false,false
+287,Slakoth (Shiny),false,true
+288,Vigoroth,false,false
+288,Vigoroth (Shiny),false,true
+289,Slaking,false,false
+289,Slaking (Shiny),false,true
+290,Nincada,false,false
+290,Nincada (Shiny),false,true
+291,Ninjask,false,false
+291,Ninjask (Shiny),false,true
+292,Shedinja,false,false
+292,Shedinja (Shiny),false,true
+293,Whismur,false,false
+293,Whismur (Shiny),false,true
+294,Loudred,false,false
+294,Loudred (Shiny),false,true
+295,Exploud,false,false
+295,Exploud (Shiny),false,true
+296,Makuhita,false,false
+296,Makuhita (Shiny),false,true
+297,Hariyama,false,false
+297,Hariyama (Shiny),false,true
+298,Azurill,false,false
+298,Azurill (Shiny),false,true
+299,Nosepass,false,false
+299,Nosepass (Shiny),false,true
+300,Skitty,false,false
+300,Skitty (Shiny),false,true
+301,Delcatty,false,false
+301,Delcatty (Shiny),false,true
+302,Sableye,false,false
+302,Sableye (Shiny),false,true
+303,Mawile,false,false
+303,Mawile (Shiny),false,true
+304,Aron,false,false
+304,Aron (Shiny),false,true
+305,Lairon,false,false
+305,Lairon (Shiny),false,true
+306,Aggron,false,false
+306,Aggron (Shiny),false,true
+307,Meditite,false,false
+307,Meditite (Shiny),false,true
+308,Medicham,false,false
+308,Medicham (Shiny),false,true
+309,Electrike,false,false
+309,Electrike (Shiny),false,true
+310,Manectric,false,false
+310,Manectric (Shiny),false,true
+311,Plusle,false,false
+311,Plusle (Shiny),false,true
+312,Minun,false,false
+312,Minun (Shiny),false,true
+313,Volbeat,false,false
+313,Volbeat (Shiny),false,true
+314,Illumise,false,false
+314,Illumise (Shiny),false,true
+315,Roselia,false,false
+315,Roselia (Shiny),false,true
+316,Gulpin,false,false
+316,Gulpin (Shiny),false,true
+317,Swalot,false,false
+317,Swalot (Shiny),false,true
+318,Carvanha,false,false
+318,Carvanha (Shiny),false,true
+319,Sharpedo,false,false
+319,Sharpedo (Shiny),false,true
+320,Wailmer,false,false
+320,Wailmer (Shiny),false,true
+321,Wailord,false,false
+321,Wailord (Shiny),false,true
+322,Numel,false,false
+322,Numel (Shiny),false,true
+323,Camerupt,false,false
+323,Camerupt (Shiny),false,true
+324,Torkoal,false,false
+324,Torkoal (Shiny),false,true
+325,Spoink,false,false
+325,Spoink (Shiny),false,true
+326,Grumpig,false,false
+326,Grumpig (Shiny),false,true
+327,Spinda,false,false
+327,Spinda (Shiny),false,true
+328,Trapinch,false,false
+328,Trapinch (Shiny),false,true
+329,Vibrava,false,false
+329,Vibrava (Shiny),false,true
+330,Flygon,false,false
+330,Flygon (Shiny),false,true
+331,Cacnea,false,false
+331,Cacnea (Shiny),false,true
+332,Cacturne,false,false
+332,Cacturne (Shiny),false,true
+333,Swablu,false,false
+333,Swablu (Shiny),false,true
+334,Altaria,false,false
+334,Altaria (Shiny),false,true
+335,Zangoose,false,false
+335,Zangoose (Shiny),false,true
+336,Seviper,false,false
+336,Seviper (Shiny),false,true
+337,Lunatone,false,false
+337,Lunatone (Shiny),false,true
+338,Solrock,false,false
+338,Solrock (Shiny),false,true
+339,Barboach,false,false
+339,Barboach (Shiny),false,true
+340,Whiscash,false,false
+340,Whiscash (Shiny),false,true
+341,Corphish,false,false
+341,Corphish (Shiny),false,true
+342,Crawdaunt,false,false
+342,Crawdaunt (Shiny),false,true
+343,Baltoy,false,false
+343,Baltoy (Shiny),false,true
+344,Claydol,false,false
+344,Claydol (Shiny),false,true
+345,Lileep,false,false
+345,Lileep (Shiny),false,true
+346,Cradily,false,false
+346,Cradily (Shiny),false,true
+347,Anorith,false,false
+347,Anorith (Shiny),false,true
+348,Armaldo,false,false
+348,Armaldo (Shiny),false,true
+349,Feebas,false,false
+349,Feebas (Shiny),false,true
+350,Milotic,false,false
+350,Milotic (Shiny),false,true
+351,Castform,false,false
+351,Castform (Shiny),false,true
+352,Kecleon,false,false
+352,Kecleon (Shiny),false,true
+353,Shuppet,false,false
+353,Shuppet (Shiny),false,true
+354,Banette,false,false
+354,Banette (Shiny),false,true
+355,Duskull,false,false
+355,Duskull (Shiny),false,true
+356,Dusclops,false,false
+356,Dusclops (Shiny),false,true
+357,Tropius,false,false
+357,Tropius (Shiny),false,true
+358,Chimecho,false,false
+358,Chimecho (Shiny),false,true
+359,Absol,false,false
+359,Absol (Shiny),false,true
+360,Wynaut,false,false
+360,Wynaut (Shiny),false,true
+361,Snorunt,false,false
+361,Snorunt (Shiny),false,true
+362,Glalie,false,false
+362,Glalie (Shiny),false,true
+363,Spheal,false,false
+363,Spheal (Shiny),false,true
+364,Sealeo,false,false
+364,Sealeo (Shiny),false,true
+365,Walrein,false,false
+365,Walrein (Shiny),false,true
+366,Clamperl,false,false
+366,Clamperl (Shiny),false,true
+367,Huntail,false,false
+367,Huntail (Shiny),false,true
+368,Gorebyss,false,false
+368,Gorebyss (Shiny),false,true
+369,Relicanth,false,false
+369,Relicanth (Shiny),false,true
+370,Luvdisc,false,false
+370,Luvdisc (Shiny),false,true
+371,Bagon,false,false
+371,Bagon (Shiny),false,true
+372,Shelgon,false,false
+372,Shelgon (Shiny),false,true
+373,Salamence,false,false
+373,Salamence (Shiny),false,true
+374,Beldum,false,false
+374,Beldum (Shiny),false,true
+375,Metang,false,false
+375,Metang (Shiny),false,true
+376,Metagross,false,false
+376,Metagross (Shiny),false,true
+377,Regirock,true,false
+377,Regirock (Shiny),true,true
+378,Regice,true,false
+378,Regice (Shiny),true,true
+379,Registeel,true,false
+379,Registeel (Shiny),true,true
+380,Latias,true,false
+380,Latias (Shiny),true,true
+381,Latios,true,false
+381,Latios (Shiny),true,true
+382,Kyogre,true,false
+382,Kyogre (Shiny),true,true
+383,Groudon,true,false
+383,Groudon (Shiny),true,true
+384,Rayquaza,true,false
+384,Rayquaza (Shiny),true,true
+385,Jirachi,true,false
+385,Jirachi (Shiny),true,true
+386,Deoxys,true,false
+386,Deoxys (Shiny),true,true
+386,Deoxys (Attack),true,false
+386,Deoxys (Attack Shiny),true,true
+386,Deoxys (Defense),true,false
+386,Deoxys (Defense Shiny),true,true
+386,Deoxys (Speed),true,false
+386,Deoxys (Speed Shiny),true,true
+387,Turtwig,false,false
+387,Turtwig (Shiny),false,true
+388,Grotle,false,false
+388,Grotle (Shiny),false,true
+389,Torterra,false,false
+389,Torterra (Shiny),false,true
+390,Chimchar,false,false
+390,Chimchar (Shiny),false,true
+391,Monferno,false,false
+391,Monferno (Shiny),false,true
+392,Infernape,false,false
+392,Infernape (Shiny),false,true
+393,Piplup,false,false
+393,Piplup (Shiny),false,true
+394,Prinplup,false,false
+394,Prinplup (Shiny),false,true
+395,Empoleon,false,false
+395,Empoleon (Shiny),false,true
+396,Starly,false,false
+396,Starly (Shiny),false,true
+397,Staravia,false,false
+397,Staravia (Shiny),false,true
+398,Staraptor,false,false
+398,Staraptor (Shiny),false,true
+399,Bidoof,false,false
+399,Bidoof (Shiny),false,true
+400,Bibarel,false,false
+400,Bibarel (Shiny),false,true
+401,Kricketot,false,false
+401,Kricketot (Shiny),false,true
+402,Kricketune,false,false
+402,Kricketune (Shiny),false,true
+403,Shinx,false,false
+403,Shinx (Shiny),false,true
+404,Luxio,false,false
+404,Luxio (Shiny),false,true
+405,Luxray,false,false
+405,Luxray (Shiny),false,true
+406,Budew,false,false
+406,Budew (Shiny),false,true
+407,Roserade,false,false
+407,Roserade (Shiny),false,true
+408,Cranidos,false,false
+408,Cranidos (Shiny),false,true
+409,Rampardos,false,false
+409,Rampardos (Shiny),false,true
+410,Shieldon,false,false
+410,Shieldon (Shiny),false,true
+411,Bastiodon,false,false
+411,Bastiodon (Shiny),false,true
+412,Burmy,false,false
+412,Burmy (Shiny),false,true
+413,Wormadam (Plant),false,false
+413,Wormadam (Plant Shiny),false,true
+413,Wormadam (Sandy),false,false
+413,Wormadam (Sandy Shiny),false,true
+413,Wormadam (Trash),false,false
+413,Wormadam (Trash Shiny),false,true
+414,Mothim,false,false
+414,Mothim (Shiny),false,true
+415,Combee,false,false
+415,Combee (Shiny),false,true
+416,Vespiquen,false,false
+416,Vespiquen (Shiny),false,true
+417,Pachirisu,false,false
+417,Pachirisu (Shiny),false,true
+418,Buizel,false,false
+418,Buizel (Shiny),false,true
+419,Floatzel,false,false
+419,Floatzel (Shiny),false,true
+420,Cherubi,false,false
+420,Cherubi (Shiny),false,true
+421,Cherrim,false,false
+421,Cherrim (Shiny),false,true
+422,Shellos (West),false,false
+422,Shellos (West Shiny),false,true
+422,Shellos (East),false,false
+422,Shellos (East Shiny),false,true
+423,Gastrodon (West),false,false
+423,Gastrodon (West Shiny),false,true
+423,Gastrodon (East),false,false
+423,Gastrodon (East Shiny),false,true
+424,Ambipom,false,false
+424,Ambipom (Shiny),false,true
+425,Drifloon,false,false
+425,Drifloon (Shiny),false,true
+426,Drifblim,false,false
+426,Drifblim (Shiny),false,true
+427,Buneary,false,false
+427,Buneary (Shiny),false,true
+428,Lopunny,false,false
+428,Lopunny (Shiny),false,true
+429,Mismagius,false,false
+429,Mismagius (Shiny),false,true
+430,Honchkrow,false,false
+430,Honchkrow (Shiny),false,true
+431,Glameow,false,false
+431,Glameow (Shiny),false,true
+432,Purugly,false,false
+432,Purugly (Shiny),false,true
+433,Chingling,false,false
+433,Chingling (Shiny),false,true
+434,Stunky,false,false
+434,Stunky (Shiny),false,true
+435,Skuntank,false,false
+435,Skuntank (Shiny),false,true
+436,Bronzor,false,false
+436,Bronzor (Shiny),false,true
+437,Bronzong,false,false
+437,Bronzong (Shiny),false,true
+438,Bonsly,false,false
+438,Bonsly (Shiny),false,true
+439,Mime Jr.,false,false
+439,Mime Jr. (Shiny),false,true
+440,Happiny,false,false
+440,Happiny (Shiny),false,true
+441,Chatot,false,false
+441,Chatot (Shiny),false,true
+442,Spiritomb,false,false
+442,Spiritomb (Shiny),false,true
+443,Gible,false,false
+443,Gible (Shiny),false,true
+444,Gabite,false,false
+444,Gabite (Shiny),false,true
+445,Garchomp,false,false
+445,Garchomp (Shiny),false,true
+446,Munchlax,false,false
+446,Munchlax (Shiny),false,true
+447,Riolu,false,false
+447,Riolu (Shiny),false,true
+448,Lucario,false,false
+448,Lucario (Shiny),false,true
+449,Hippopotas,false,false
+449,Hippopotas (Shiny),false,true
+450,Hippowdon,false,false
+450,Hippowdon (Shiny),false,true
+451,Skorupi,false,false
+451,Skorupi (Shiny),false,true
+452,Drapion,false,false
+452,Drapion (Shiny),false,true
+453,Croagunk,false,false
+453,Croagunk (Shiny),false,true
+454,Toxicroak,false,false
+454,Toxicroak (Shiny),false,true
+455,Carnivine,false,false
+455,Carnivine (Shiny),false,true
+456,Finneon,false,false
+456,Finneon (Shiny),false,true
+457,Lumineon,false,false
+457,Lumineon (Shiny),false,true
+458,Mantyke,false,false
+458,Mantyke (Shiny),false,true
+459,Snover,false,false
+459,Snover (Shiny),false,true
+460,Abomasnow,false,false
+460,Abomasnow (Shiny),false,true
+461,Weavile,false,false
+461,Weavile (Shiny),false,true
+462,Magnezone,false,false
+462,Magnezone (Shiny),false,true
+463,Lickilicky,false,false
+463,Lickilicky (Shiny),false,true
+464,Rhyperior,false,false
+464,Rhyperior (Shiny),false,true
+465,Tangrowth,false,false
+465,Tangrowth (Shiny),false,true
+466,Electivire,false,false
+466,Electivire (Shiny),false,true
+467,Magmortar,false,false
+467,Magmortar (Shiny),false,true
+468,Togekiss,false,false
+468,Togekiss (Shiny),false,true
+469,Yanmega,false,false
+469,Yanmega (Shiny),false,true
+470,Leafeon,false,false
+470,Leafeon (Shiny),false,true
+471,Glaceon,false,false
+471,Glaceon (Shiny),false,true
+472,Gliscor,false,false
+472,Gliscor (Shiny),false,true
+473,Mamoswine,false,false
+473,Mamoswine (Shiny),false,true
+474,Porygon-Z,false,false
+474,Porygon-Z (Shiny),false,true
+475,Gallade,false,false
+475,Gallade (Shiny),false,true
+476,Probopass,false,false
+476,Probopass (Shiny),false,true
+477,Dusknoir,false,false
+477,Dusknoir (Shiny),false,true
+478,Froslass,false,false
+478,Froslass (Shiny),false,true
+479,Rotom,false,false
+479,Rotom (Shiny),false,true
+479,Rotom (Heat),false,false
+479,Rotom (Wash),false,false
+479,Rotom (Frost),false,false
+479,Rotom (Fan),false,false
+479,Rotom (Mow),false,false
+480,Uxie,true,false
+480,Uxie (Shiny),true,true
+481,Mesprit,true,false
+481,Mesprit (Shiny),true,true
+482,Azelf,true,false
+482,Azelf (Shiny),true,true
+483,Dialga,true,false
+483,Dialga (Shiny),true,true
+483,Dialga (Origin),true,false
+483,Dialga (Origin Shiny),true,true
+484,Palkia,true,false
+484,Palkia (Shiny),true,true
+484,Palkia (Origin),true,false
+484,Palkia (Origin Shiny),true,true
+485,Heatran,true,false
+485,Heatran (Shiny),true,true
+486,Regigigas,true,false
+486,Regigigas (Shiny),true,true
+487,Giratina (Altered),true,false
+487,Giratina (Altered Shiny),true,true
+487,Giratina (Origin),true,false
+487,Giratina (Origin Shiny),true,true
+488,Cresselia,true,false
+488,Cresselia (Shiny),true,true
+489,Phione,true,false
+489,Phione (Shiny),true,true
+490,Manaphy,true,false
+490,Manaphy (Shiny),true,true
+491,Darkrai,true,false
+491,Darkrai (Shiny),true,true
+492,Shaymin (Land),true,false
+492,Shaymin (Land Shiny),true,true
+492,Shaymin (Sky),true,false
+492,Shaymin (Sky Shiny),true,true
+493,Arceus,true,false
+493,Arceus (Shiny),true,true
+494,Victini,true,false
+494,Victini (Shiny),true,true
+495,Snivy,false,false
+495,Snivy (Shiny),false,true
+496,Servine,false,false
+496,Servine (Shiny),false,true
+497,Serperior,false,false
+497,Serperior (Shiny),false,true
+498,Tepig,false,false
+498,Tepig (Shiny),false,true
+499,Pignite,false,false
+499,Pignite (Shiny),false,true
+500,Emboar,false,false
+500,Emboar (Shiny),false,true
+501,Oshawott,false,false
+501,Oshawott (Shiny),false,true
+502,Dewott,false,false
+502,Dewott (Shiny),false,true
+503,Samurott,false,false
+503,Samurott (Shiny),false,true
+503,Samurott (Hisuian),false,false
+503,Samurott (Hisuian Shiny),false,true
+504,Patrat,false,false
+504,Patrat (Shiny),false,true
+505,Watchog,false,false
+505,Watchog (Shiny),false,true
+506,Lillipup,false,false
+506,Lillipup (Shiny),false,true
+507,Herdier,false,false
+507,Herdier (Shiny),false,true
+508,Stoutland,false,false
+508,Stoutland (Shiny),false,true
+509,Purrloin,false,false
+509,Purrloin (Shiny),false,true
+510,Liepard,false,false
+510,Liepard (Shiny),false,true
+511,Pansage,false,false
+511,Pansage (Shiny),false,true
+512,Simisage,false,false
+512,Simisage (Shiny),false,true
+513,Pansear,false,false
+513,Pansear (Shiny),false,true
+514,Simisear,false,false
+514,Simisear (Shiny),false,true
+515,Panpour,false,false
+515,Panpour (Shiny),false,true
+516,Simipour,false,false
+516,Simipour (Shiny),false,true
+517,Munna,false,false
+517,Munna (Shiny),false,true
+518,Musharna,false,false
+518,Musharna (Shiny),false,true
+519,Pidove,false,false
+519,Pidove (Shiny),false,true
+520,Tranquill,false,false
+520,Tranquill (Shiny),false,true
+521,Unfezant,false,false
+521,Unfezant (Shiny),false,true
+522,Blitzle,false,false
+522,Blitzle (Shiny),false,true
+523,Zebstrika,false,false
+523,Zebstrika (Shiny),false,true
+524,Roggenrola,false,false
+524,Roggenrola (Shiny),false,true
+525,Boldore,false,false
+525,Boldore (Shiny),false,true
+526,Gigalith,false,false
+526,Gigalith (Shiny),false,true
+527,Woobat,false,false
+527,Woobat (Shiny),false,true
+528,Swoobat,false,false
+528,Swoobat (Shiny),false,true
+529,Drilbur,false,false
+529,Drilbur (Shiny),false,true
+530,Excadrill,false,false
+530,Excadrill (Shiny),false,true
+531,Audino,false,false
+531,Audino (Shiny),false,true
+532,Timburr,false,false
+532,Timburr (Shiny),false,true
+533,Gurdurr,false,false
+533,Gurdurr (Shiny),false,true
+534,Conkeldurr,false,false
+534,Conkeldurr (Shiny),false,true
+535,Tympole,false,false
+535,Tympole (Shiny),false,true
+536,Palpitoad,false,false
+536,Palpitoad (Shiny),false,true
+537,Seismitoad,false,false
+537,Seismitoad (Shiny),false,true
+538,Throh,false,false
+538,Throh (Shiny),false,true
+539,Sawk,false,false
+539,Sawk (Shiny),false,true
+540,Sewaddle,false,false
+540,Sewaddle (Shiny),false,true
+541,Swadloon,false,false
+541,Swadloon (Shiny),false,true
+542,Leavanny,false,false
+542,Leavanny (Shiny),false,true
+543,Venipede,false,false
+543,Venipede (Shiny),false,true
+544,Whirlipede,false,false
+544,Whirlipede (Shiny),false,true
+545,Scolipede,false,false
+545,Scolipede (Shiny),false,true
+546,Cottonee,false,false
+546,Cottonee (Shiny),false,true
+547,Whimsicott,false,false
+547,Whimsicott (Shiny),false,true
+548,Petilil,false,false
+548,Petilil (Shiny),false,true
+549,Lilligant,false,false
+549,Lilligant (Shiny),false,true
+549,Lilligant (Hisuian),false,false
+549,Lilligant (Hisuian Shiny),false,true
+550,Basculin (Red),false,false
+550,Basculin (Red Shiny),false,true
+550,Basculin (Blue),false,false
+550,Basculin (Blue Shiny),false,true
+551,Sandile,false,false
+551,Sandile (Shiny),false,true
+552,Krokorok,false,false
+552,Krokorok (Shiny),false,true
+553,Krookodile,false,false
+553,Krookodile (Shiny),false,true
+554,Darumaka,false,false
+554,Darumaka (Shiny),false,true
+554,Darumaka (Galarian),false,false
+554,Darumaka (Galarian Shiny),false,true
+555,Darmanitan,false,false
+555,Darmanitan (Shiny),false,true
+555,Darmanitan (Galarian),false,false
+555,Darmanitan (Galarian Shiny),false,true
+556,Maractus,false,false
+556,Maractus (Shiny),false,true
+557,Dwebble,false,false
+557,Dwebble (Shiny),false,true
+558,Crustle,false,false
+558,Crustle (Shiny),false,true
+559,Scraggy,false,false
+559,Scraggy (Shiny),false,true
+560,Scrafty,false,false
+560,Scrafty (Shiny),false,true
+561,Sigilyph,false,false
+561,Sigilyph (Shiny),false,true
+562,Yamask,false,false
+562,Yamask (Shiny),false,true
+562,Yamask (Galarian),false,false
+562,Yamask (Galarian Shiny),false,true
+563,Cofagrigus,false,false
+563,Cofagrigus (Shiny),false,true
+564,Tirtouga,false,false
+564,Tirtouga (Shiny),false,true
+565,Carracosta,false,false
+565,Carracosta (Shiny),false,true
+566,Archen,false,false
+566,Archen (Shiny),false,true
+567,Archeops,false,false
+567,Archeops (Shiny),false,true
+568,Trubbish,false,false
+568,Trubbish (Shiny),false,true
+569,Garbodor,false,false
+569,Garbodor (Shiny),false,true
+569,Garbodor (Gigantamax),false,false,true
+569,Garbodor (Gigantamax Shiny),false,true,true
+570,Zorua,false,false
+570,Zorua (Shiny),false,true
+570,Zorua (Hisuian),false,false
+570,Zorua (Hisuian Shiny),false,true
+571,Zoroark,false,false
+571,Zoroark (Shiny),false,true
+571,Zoroark (Hisuian),false,false
+571,Zoroark (Hisuian Shiny),false,true
+572,Minccino,false,false
+572,Minccino (Shiny),false,true
+573,Cinccino,false,false
+573,Cinccino (Shiny),false,true
+574,Gothita,false,false
+574,Gothita (Shiny),false,true
+575,Gothorita,false,false
+575,Gothorita (Shiny),false,true
+576,Gothitelle,false,false
+576,Gothitelle (Shiny),false,true
+577,Solosis,false,false
+577,Solosis (Shiny),false,true
+578,Duosion,false,false
+578,Duosion (Shiny),false,true
+579,Reuniclus,false,false
+579,Reuniclus (Shiny),false,true
+580,Ducklett,false,false
+580,Ducklett (Shiny),false,true
+581,Swanna,false,false
+581,Swanna (Shiny),false,true
+582,Vanillite,false,false
+582,Vanillite (Shiny),false,true
+583,Vanillish,false,false
+583,Vanillish (Shiny),false,true
+584,Vanilluxe,false,false
+584,Vanilluxe (Shiny),false,true
+585,Deerling (Spring),false,false
+585,Deerling (Summer),false,false
+585,Deerling (Autumn),false,false
+585,Deerling (Winter),false,false
+586,Sawsbuck (Spring),false,false
+586,Sawsbuck (Summer),false,false
+586,Sawsbuck (Autumn),false,false
+586,Sawsbuck (Winter),false,false
+587,Emolga,false,false
+587,Emolga (Shiny),false,true
+588,Karrablast,false,false
+588,Karrablast (Shiny),false,true
+589,Escavalier,false,false
+589,Escavalier (Shiny),false,true
+590,Foongus,false,false
+590,Foongus (Shiny),false,true
+591,Amoonguss,false,false
+591,Amoonguss (Shiny),false,true
+592,Frillish,false,false
+592,Frillish (Shiny),false,true
+593,Jellicent,false,false
+593,Jellicent (Shiny),false,true
+594,Alomomola,false,false
+594,Alomomola (Shiny),false,true
+595,Joltik,false,false
+595,Joltik (Shiny),false,true
+596,Galvantula,false,false
+596,Galvantula (Shiny),false,true
+597,Ferroseed,false,false
+597,Ferroseed (Shiny),false,true
+598,Ferrothorn,false,false
+598,Ferrothorn (Shiny),false,true
+599,Klink,false,false
+599,Klink (Shiny),false,true
+600,Klang,false,false
+600,Klang (Shiny),false,true
+601,Klinklang,false,false
+601,Klinklang (Shiny),false,true
+602,Tynamo,false,false
+602,Tynamo (Shiny),false,true
+603,Eelektrik,false,false
+603,Eelektrik (Shiny),false,true
+604,Eelektross,false,false
+604,Eelektross (Shiny),false,true
+605,Elgyem,false,false
+605,Elgyem (Shiny),false,true
+606,Beheeyem,false,false
+606,Beheeyem (Shiny),false,true
+607,Litwick,false,false
+607,Litwick (Shiny),false,true
+608,Lampent,false,false
+608,Lampent (Shiny),false,true
+609,Chandelure,false,false
+609,Chandelure (Shiny),false,true
+610,Axew,false,false
+610,Axew (Shiny),false,true
+611,Fraxure,false,false
+611,Fraxure (Shiny),false,true
+612,Haxorus,false,false
+612,Haxorus (Shiny),false,true
+613,Cubchoo,false,false
+613,Cubchoo (Shiny),false,true
+614,Beartic,false,false
+614,Beartic (Shiny),false,true
+615,Cryogonal,false,false
+615,Cryogonal (Shiny),false,true
+616,Shelmet,false,false
+616,Shelmet (Shiny),false,true
+617,Accelgor,false,false
+617,Accelgor (Shiny),false,true
+618,Stunfisk,false,false
+618,Stunfisk (Shiny),false,true
+618,Stunfisk (Galarian),false,false
+618,Stunfisk (Galarian Shiny),false,true
+619,Mienfoo,false,false
+619,Mienfoo (Shiny),false,true
+620,Mienshao,false,false
+620,Mienshao (Shiny),false,true
+621,Druddigon,false,false
+621,Druddigon (Shiny),false,true
+622,Golett,false,false
+622,Golett (Shiny),false,true
+623,Golurk,false,false
+623,Golurk (Shiny),false,true
+624,Pawniard,false,false
+624,Pawniard (Shiny),false,true
+625,Bisharp,false,false
+625,Bisharp (Shiny),false,true
+626,Bouffalant,false,false
+626,Bouffalant (Shiny),false,true
+627,Rufflet,false,false
+627,Rufflet (Shiny),false,true
+628,Braviary,false,false
+628,Braviary (Shiny),false,true
+628,Braviary (Hisuian),false,false
+628,Braviary (Hisuian Shiny),false,true
+629,Vullaby,false,false
+629,Vullaby (Shiny),false,true
+630,Mandibuzz,false,false
+630,Mandibuzz (Shiny),false,true
+631,Heatmor,false,false
+631,Heatmor (Shiny),false,true
+632,Durant,false,false
+632,Durant (Shiny),false,true
+633,Deino,false,false
+633,Deino (Shiny),false,true
+634,Zweilous,false,false
+634,Zweilous (Shiny),false,true
+635,Hydreigon,false,false
+635,Hydreigon (Shiny),false,true
+636,Larvesta,false,false
+636,Larvesta (Shiny),false,true
+637,Volcarona,false,false
+637,Volcarona (Shiny),false,true
+638,Cobalion,true,false
+638,Cobalion (Shiny),true,true
+639,Terrakion,true,false
+639,Terrakion (Shiny),true,true
+640,Virizion,true,false
+640,Virizion (Shiny),true,true
+641,Tornadus (Incarnate),true,false
+641,Tornadus (Incarnate Shiny),true,true
+641,Tornadus (Therian),true,false
+641,Tornadus (Therian Shiny),true,true
+642,Thundurus (Incarnate),true,false
+642,Thundurus (Incarnate Shiny),true,true
+642,Thundurus (Therian),true,false
+642,Thundurus (Therian Shiny),true,true
+643,Reshiram,true,false
+643,Reshiram (Shiny),true,true
+644,Zekrom,true,false
+644,Zekrom (Shiny),true,true
+645,Landorus (Incarnate),true,false
+645,Landorus (Incarnate Shiny),true,true
+645,Landorus (Therian),true,false
+645,Landorus (Therian Shiny),true,true
+646,Kyurem,true,false
+646,Kyurem (Shiny),true,true
+647,Keldeo,true,false
+647,Keldeo (Shiny),true,true
+648,Meloetta (Aria),true,false
+648,Meloetta (Pirouette),true,false
+649,Genesect,true,false
+649,Genesect (Shiny),true,true
+650,Chespin,false,false
+650,Chespin (Shiny),false,true
+651,Quilladin,false,false
+651,Quilladin (Shiny),false,true
+652,Chesnaught,false,false
+652,Chesnaught (Shiny),false,true
+653,Fennekin,false,false
+653,Fennekin (Shiny),false,true
+654,Braixen,false,false
+654,Braixen (Shiny),false,true
+655,Delphox,false,false
+655,Delphox (Shiny),false,true
+656,Froakie,false,false
+656,Froakie (Shiny),false,true
+657,Frogadier,false,false
+657,Frogadier (Shiny),false,true
+658,Greninja,false,false
+658,Greninja (Shiny),false,true
+659,Bunnelby,false,false
+659,Bunnelby (Shiny),false,true
+660,Diggersby,false,false
+660,Diggersby (Shiny),false,true
+661,Fletchling,false,false
+661,Fletchling (Shiny),false,true
+662,Fletchinder,false,false
+662,Fletchinder (Shiny),false,true
+663,Talonflame,false,false
+663,Talonflame (Shiny),false,true
+664,Scatterbug,false,false
+664,Scatterbug (Shiny),false,true
+665,Spewpa,false,false
+665,Spewpa (Shiny),false,true
+666,Vivillon,false,false
+666,Vivillon (Shiny),false,true
+667,Litleo,false,false
+667,Litleo (Shiny),false,true
+668,Pyroar,false,false
+668,Pyroar (Shiny),false,true
+669,Flabébé,false,false
+669,Flabébé (Shiny),false,true
+670,Floette,false,false
+670,Floette (Shiny),false,true
+671,Florges,false,false
+671,Florges (Shiny),false,true
+672,Skiddo,false,false
+672,Skiddo (Shiny),false,true
+673,Gogoat,false,false
+673,Gogoat (Shiny),false,true
+674,Pancham,false,false
+674,Pancham (Shiny),false,true
+675,Pangoro,false,false
+675,Pangoro (Shiny),false,true
+676,Furfrou,false,false
+676,Furfrou (Shiny),false,true
+677,Espurr,false,false
+677,Espurr (Shiny),false,true
+678,Meowstic,false,false
+678,Meowstic (Shiny),false,true
+679,Honedge,false,false
+679,Honedge (Shiny),false,true
+680,Doublade,false,false
+680,Doublade (Shiny),false,true
+681,Aegislash,false,false
+681,Aegislash (Shiny),false,true
+682,Spritzee,false,false
+682,Spritzee (Shiny),false,true
+683,Aromatisse,false,false
+683,Aromatisse (Shiny),false,true
+684,Swirlix,false,false
+684,Swirlix (Shiny),false,true
+685,Slurpuff,false,false
+685,Slurpuff (Shiny),false,true
+686,Inkay,false,false
+686,Inkay (Shiny),false,true
+687,Malamar,false,false
+687,Malamar (Shiny),false,true
+688,Binacle,false,false
+688,Binacle (Shiny),false,true
+689,Barbaracle,false,false
+689,Barbaracle (Shiny),false,true
+690,Skrelp,false,false
+690,Skrelp (Shiny),false,true
+691,Dragalge,false,false
+691,Dragalge (Shiny),false,true
+692,Clauncher,false,false
+692,Clauncher (Shiny),false,true
+693,Clawitzer,false,false
+693,Clawitzer (Shiny),false,true
+694,Helioptile,false,false
+694,Helioptile (Shiny),false,true
+695,Heliolisk,false,false
+695,Heliolisk (Shiny),false,true
+696,Tyrunt,false,false
+696,Tyrunt (Shiny),false,true
+697,Tyrantrum,false,false
+697,Tyrantrum (Shiny),false,true
+698,Amaura,false,false
+698,Amaura (Shiny),false,true
+699,Aurorus,false,false
+699,Aurorus (Shiny),false,true
+700,Sylveon,false,false
+700,Sylveon (Shiny),false,true
+701,Hawlucha,false,false
+701,Hawlucha (Shiny),false,true
+702,Dedenne,false,false
+702,Dedenne (Shiny),false,true
+703,Carbink,false,false
+703,Carbink (Shiny),false,true
+704,Goomy,false,false
+704,Goomy (Shiny),false,true
+705,Sliggoo,false,false
+705,Sliggoo (Shiny),false,true
+705,Sliggoo (Hisuian),false,false
+705,Sliggoo (Hisuian Shiny),false,true
+706,Goodra,false,false
+706,Goodra (Shiny),false,true
+706,Goodra (Hisuian),false,false
+706,Goodra (Hisuian Shiny),false,true
+707,Klefki,false,false
+707,Klefki (Shiny),false,true
+708,Phantump,false,false
+708,Phantump (Shiny),false,true
+709,Trevenant,false,false
+709,Trevenant (Shiny),false,true
+710,Pumpkaboo,false,false
+710,Pumpkaboo (Shiny),false,true
+711,Gourgeist,false,false
+711,Gourgeist (Shiny),false,true
+712,Bergmite,false,false
+712,Bergmite (Shiny),false,true
+713,Avalugg,false,false
+713,Avalugg (Shiny),false,true
+713,Avalugg (Hisuian),false,false
+713,Avalugg (Hisuian Shiny),false,true
+714,Noibat,false,false
+714,Noibat (Shiny),false,true
+715,Noivern,false,false
+715,Noivern (Shiny),false,true
+716,Xerneas,true,false
+716,Xerneas (Shiny),true,true
+717,Yveltal,true,false
+717,Yveltal (Shiny),true,true
+718,Zygarde (50%),true,false
+718,Zygarde (50% Shiny),true,true
+718,Zygarde (10%),true,false
+718,Zygarde (10% Shiny),true,true
+718,Zygarde (Complete),true,false
+718,Zygarde (Complete Shiny),true,true
+719,Diancie,true,false
+719,Diancie (Shiny),true,true
+720,Hoopa (Confined),true,false
+720,Hoopa (Confined Shiny),true,true
+720,Hoopa (Unbound),true,false
+720,Hoopa (Unbound Shiny),true,true
+721,Volcanion,true,false
+721,Volcanion (Shiny),true,true
+722,Rowlet,false,false
+722,Rowlet (Shiny),false,true
+723,Dartrix,false,false
+723,Dartrix (Shiny),false,true
+724,Decidueye,false,false
+724,Decidueye (Shiny),false,true
+724,Decidueye (Hisuian),false,false
+724,Decidueye (Hisuian Shiny),false,true
+725,Litten,false,false
+725,Litten (Shiny),false,true
+726,Torracat,false,false
+726,Torracat (Shiny),false,true
+727,Incineroar,false,false
+727,Incineroar (Shiny),false,true
+728,Popplio,false,false
+728,Popplio (Shiny),false,true
+729,Brionne,false,false
+729,Brionne (Shiny),false,true
+730,Primarina,false,false
+730,Primarina (Shiny),false,true
+731,Pikipek,false,false
+731,Pikipek (Shiny),false,true
+732,Trumbeak,false,false
+732,Trumbeak (Shiny),false,true
+733,Toucannon,false,false
+733,Toucannon (Shiny),false,true
+734,Yungoos,false,false
+734,Yungoos (Shiny),false,true
+735,Gumshoos,false,false
+735,Gumshoos (Shiny),false,true
+736,Grubbin,false,false
+736,Grubbin (Shiny),false,true
+737,Charjabug,false,false
+737,Charjabug (Shiny),false,true
+738,Vikavolt,false,false
+738,Vikavolt (Shiny),false,true
+739,Crabrawler,false,false
+739,Crabrawler (Shiny),false,true
+740,Crabominable,false,false
+740,Crabominable (Shiny),false,true
+741,Oricorio (Baile),false,false
+741,Oricorio (Pom-Pom),false,false
+741,Oricorio (Pa'u),false,false
+741,Oricorio (Sensu),false,false
+742,Cutiefly,false,false
+742,Cutiefly (Shiny),false,true
+743,Ribombee,false,false
+743,Ribombee (Shiny),false,true
+744,Rockruff,false,false
+744,Rockruff (Shiny),false,true
+745,Lycanroc (Midday),false,false
+745,Lycanroc (Midday Shiny),false,true
+745,Lycanroc (Midnight),false,false
+745,Lycanroc (Midnight Shiny),false,true
+745,Lycanroc (Dusk),false,false
+745,Lycanroc (Dusk Shiny),false,true
+746,Wishiwashi,false,false
+746,Wishiwashi (Shiny),false,true
+747,Mareanie,false,false
+747,Mareanie (Shiny),false,true
+748,Toxapex,false,false
+748,Toxapex (Shiny),false,true
+749,Mudbray,false,false
+749,Mudbray (Shiny),false,true
+750,Mudsdale,false,false
+750,Mudsdale (Shiny),false,true
+751,Dewpider,false,false
+751,Dewpider (Shiny),false,true
+752,Araquanid,false,false
+752,Araquanid (Shiny),false,true
+753,Fomantis,false,false
+753,Fomantis (Shiny),false,true
+754,Lurantis,false,false
+754,Lurantis (Shiny),false,true
+755,Morelull,false,false
+755,Morelull (Shiny),false,true
+756,Shiinotic,false,false
+756,Shiinotic (Shiny),false,true
+757,Salandit,false,false
+757,Salandit (Shiny),false,true
+758,Salazzle,false,false
+758,Salazzle (Shiny),false,true
+759,Stufful,false,false
+759,Stufful (Shiny),false,true
+760,Bewear,false,false
+760,Bewear (Shiny),false,true
+761,Bounsweet,false,false
+761,Bounsweet (Shiny),false,true
+762,Steenee,false,false
+762,Steenee (Shiny),false,true
+763,Tsareena,false,false
+763,Tsareena (Shiny),false,true
+764,Comfey,false,false
+764,Comfey (Shiny),false,true
+765,Oranguru,false,false
+765,Oranguru (Shiny),false,true
+766,Passimian,false,false
+766,Passimian (Shiny),false,true
+767,Wimpod,false,false
+767,Wimpod (Shiny),false,true
+768,Golisopod,false,false
+768,Golisopod (Shiny),false,true
+769,Sandygast,false,false
+769,Sandygast (Shiny),false,true
+770,Palossand,false,false
+770,Palossand (Shiny),false,true
+771,Pyukumuku,false,false
+771,Pyukumuku (Shiny),false,true
+772,Type: Null,false,false
+772,Type: Null (Shiny),false,true
+773,Silvally,false,false
+773,Silvally (Shiny),false,true
+774,Minior,false,false
+774,Minior (Shiny),false,true
+775,Komala,false,false
+775,Komala (Shiny),false,true
+776,Turtonator,false,false
+776,Turtonator (Shiny),false,true
+777,Togedemaru,false,false
+777,Togedemaru (Shiny),false,true
+778,Mimikyu,false,false
+778,Mimikyu (Shiny),false,true
+779,Bruxish,false,false
+779,Bruxish (Shiny),false,true
+780,Drampa,false,false
+780,Drampa (Shiny),false,true
+781,Dhelmise,false,false
+781,Dhelmise (Shiny),false,true
+782,Jangmo-o,false,false
+782,Jangmo-o (Shiny),false,true
+783,Hakamo-o,false,false
+783,Hakamo-o (Shiny),false,true
+784,Kommo-o,false,false
+784,Kommo-o (Shiny),false,true
+785,Tapu Koko,true,false
+785,Tapu Koko (Shiny),true,true
+786,Tapu Lele,true,false
+786,Tapu Lele (Shiny),true,true
+787,Tapu Bulu,true,false
+787,Tapu Bulu (Shiny),true,true
+788,Tapu Fini,true,false
+788,Tapu Fini (Shiny),true,true
+789,Cosmog,true,false
+789,Cosmog (Shiny),true,true
+790,Cosmoem,true,false
+790,Cosmoem (Shiny),true,true
+791,Solgaleo,true,false
+791,Solgaleo (Shiny),true,true
+792,Lunala,true,false
+792,Lunala (Shiny),true,true
+793,Nihilego,true,false
+793,Nihilego (Shiny),true,true
+794,Buzzwole,true,false
+794,Buzzwole (Shiny),true,true
+795,Pheromosa,true,false
+795,Pheromosa (Shiny),true,true
+796,Xurkitree,true,false
+796,Xurkitree (Shiny),true,true
+797,Celesteela,true,false
+797,Celesteela (Shiny),true,true
+798,Kartana,true,false
+798,Kartana (Shiny),true,true
+799,Guzzlord,true,false
+799,Guzzlord (Shiny),true,true
+800,Necrozma,true,false
+800,Necrozma (Shiny),true,true
+800,Necrozma (Dusk Mane),true,false
+800,Necrozma (Dawn Wings),true,false
+800,Necrozma (Ultra),true,false
+801,Magearna,true,false
+801,Magearna (Original Color),true,false
+802,Marshadow,true,false
+802,Marshadow (Shiny),true,true
+803,Poipole,true,false
+803,Poipole (Shiny),true,true
+804,Naganadel,true,false
+804,Naganadel (Shiny),true,true
+805,Stakataka,true,false
+805,Stakataka (Shiny),true,true
+806,Blacephalon,true,false
+806,Blacephalon (Shiny),true,true
+807,Zeraora,true,false
+807,Zeraora (Shiny),true,true
+808,Meltan,true,false
+808,Meltan (Shiny),true,true
+809,Melmetal,true,false
+809,Melmetal (Shiny),true,true
+809,Melmetal (Gigantamax),true,false,true
+809,Melmetal (Gigantamax Shiny),true,true,true
+810,Grookey,false,false
+810,Grookey (Shiny),false,true
+811,Thwackey,false,false
+811,Thwackey (Shiny),false,true
+812,Rillaboom,false,false
+812,Rillaboom (Shiny),false,true
+812,Rillaboom (Gigantamax),false,false,true
+812,Rillaboom (Gigantamax Shiny),false,true,true
+813,Scorbunny,false,false
+813,Scorbunny (Shiny),false,true
+814,Raboot,false,false
+814,Raboot (Shiny),false,true
+815,Cinderace,false,false
+815,Cinderace (Shiny),false,true
+815,Cinderace (Gigantamax),false,false,true
+815,Cinderace (Gigantamax Shiny),false,true,true
+816,Sobble,false,false
+816,Sobble (Shiny),false,true
+817,Drizzile,false,false
+817,Drizzile (Shiny),false,true
+818,Inteleon,false,false
+818,Inteleon (Shiny),false,true
+818,Inteleon (Gigantamax),false,false,true
+818,Inteleon (Gigantamax Shiny),false,true,true
+819,Skwovet,false,false
+819,Skwovet (Shiny),false,true
+820,Greedent,false,false
+820,Greedent (Shiny),false,true
+821,Rookidee,false,false
+821,Rookidee (Shiny),false,true
+822,Corvisquire,false,false
+822,Corvisquire (Shiny),false,true
+823,Corviknight,false,false
+823,Corviknight (Shiny),false,true
+823,Corviknight (Gigantamax),false,false,true
+823,Corviknight (Gigantamax Shiny),false,true,true
+824,Blipbug,false,false
+824,Blipbug (Shiny),false,true
+825,Dottler,false,false
+825,Dottler (Shiny),false,true
+826,Orbeetle,false,false
+826,Orbeetle (Shiny),false,true
+826,Orbeetle (Gigantamax),false,false,true
+826,Orbeetle (Gigantamax Shiny),false,true,true
+827,Nickit,false,false
+827,Nickit (Shiny),false,true
+828,Thievul,false,false
+828,Thievul (Shiny),false,true
+829,Gossifleur,false,false
+829,Gossifleur (Shiny),false,true
+830,Eldegoss,false,false
+830,Eldegoss (Shiny),false,true
+831,Wooloo,false,false
+831,Wooloo (Shiny),false,true
+832,Dubwool,false,false
+832,Dubwool (Shiny),false,true
+833,Chewtle,false,false
+833,Chewtle (Shiny),false,true
+834,Drednaw,false,false
+834,Drednaw (Shiny),false,true
+834,Drednaw (Gigantamax),false,false,true
+834,Drednaw (Gigantamax Shiny),false,true,true
+835,Yamper,false,false
+835,Yamper (Shiny),false,true
+836,Boltund,false,false
+836,Boltund (Shiny),false,true
+837,Rolycoly,false,false
+837,Rolycoly (Shiny),false,true
+838,Carkol,false,false
+838,Carkol (Shiny),false,true
+839,Coalossal,false,false
+839,Coalossal (Shiny),false,true
+839,Coalossal (Gigantamax),false,false,true
+839,Coalossal (Gigantamax Shiny),false,true,true
+840,Applin,false,false
+840,Applin (Shiny),false,true
+841,Flapple,false,false
+841,Flapple (Shiny),false,true
+841,Flapple (Gigantamax),false,false,true
+841,Flapple (Gigantamax Shiny),false,true,true
+842,Appletun,false,false
+842,Appletun (Shiny),false,true
+842,Appletun (Gigantamax),false,false,true
+842,Appletun (Gigantamax Shiny),false,true,true
+843,Silicobra,false,false
+843,Silicobra (Shiny),false,true
+844,Sandaconda,false,false
+844,Sandaconda (Shiny),false,true
+844,Sandaconda (Gigantamax),false,false,true
+844,Sandaconda (Gigantamax Shiny),false,true,true
+845,Cramorant,false,false
+845,Cramorant (Shiny),false,true
+846,Arrokuda,false,false
+846,Arrokuda (Shiny),false,true
+847,Barraskewda,false,false
+847,Barraskewda (Shiny),false,true
+848,Toxel,false,false
+848,Toxel (Shiny),false,true
+849,Toxtricity (Amped),false,false
+849,Toxtricity (Amped Shiny),false,true
+849,Toxtricity (Low Key),false,false
+849,Toxtricity (Low Key Shiny),false,true
+849,Toxtricity (Gigantamax),false,false,true
+849,Toxtricity (Gigantamax Shiny),false,true,true
+850,Sizzlipede,false,false
+850,Sizzlipede (Shiny),false,true
+851,Centiskorch,false,false
+851,Centiskorch (Shiny),false,true
+851,Centiskorch (Gigantamax),false,false,true
+851,Centiskorch (Gigantamax Shiny),false,true,true
+852,Clobbopus,false,false
+852,Clobbopus (Shiny),false,true
+853,Grapploct,false,false
+853,Grapploct (Shiny),false,true
+854,Sinistea,false,false
+854,Sinistea (Shiny),false,true
+855,Polteageist,false,false
+855,Polteageist (Shiny),false,true
+856,Hatenna,false,false
+856,Hatenna (Shiny),false,true
+857,Hattrem,false,false
+857,Hattrem (Shiny),false,true
+858,Hatterene,false,false
+858,Hatterene (Shiny),false,true
+858,Hatterene (Gigantamax),false,false,true
+858,Hatterene (Gigantamax Shiny),false,true,true
+859,Impidimp,false,false
+859,Impidimp (Shiny),false,true
+860,Morgrem,false,false
+860,Morgrem (Shiny),false,true
+861,Grimmsnarl,false,false
+861,Grimmsnarl (Shiny),false,true
+861,Grimmsnarl (Gigantamax),false,false,true
+861,Grimmsnarl (Gigantamax Shiny),false,true,true
+862,Obstagoon,false,false
+862,Obstagoon (Shiny),false,true
+863,Perrserker,false,false
+863,Perrserker (Shiny),false,true
+864,Cursola,false,false
+864,Cursola (Shiny),false,true
+865,Sirfetch'd,false,false
+865,Sirfetch'd (Shiny),false,true
+866,Mr. Rime,false,false
+866,Mr. Rime (Shiny),false,true
+867,Runerigus,false,false
+867,Runerigus (Shiny),false,true
+868,Milcery,false,false
+868,Milcery (Shiny),false,true
+869,Alcremie,false,false
+869,Alcremie (Shiny),false,true
+869,Alcremie (Gigantamax),false,false,true
+869,Alcremie (Gigantamax Shiny),false,true,true
+870,Falinks,false,false
+870,Falinks (Shiny),false,true
+871,Pincurchin,false,false
+871,Pincurchin (Shiny),false,true
+872,Snom,false,false
+872,Snom (Shiny),false,true
+873,Frosmoth,false,false
+873,Frosmoth (Shiny),false,true
+874,Stonjourner,false,false
+874,Stonjourner (Shiny),false,true
+875,Eiscue (Ice),false,false
+875,Eiscue (Ice Shiny),false,true
+875,Eiscue (Noice),false,false
+875,Eiscue (Noice Shiny),false,true
+876,Indeedee (Male),false,false
+876,Indeedee (Male Shiny),false,true
+876,Indeedee (Female),false,false
+876,Indeedee (Female Shiny),false,true
+877,Morpeko,false,false
+877,Morpeko (Shiny),false,true
+878,Cufant,false,false
+878,Cufant (Shiny),false,true
+879,Copperajah,false,false
+879,Copperajah (Shiny),false,true
+879,Copperajah (Gigantamax),false,false,true
+879,Copperajah (Gigantamax Shiny),false,true,true
+880,Dracozolt,false,false
+880,Dracozolt (Shiny),false,true
+881,Arctozolt,false,false
+881,Arctozolt (Shiny),false,true
+882,Dracovish,false,false
+882,Dracovish (Shiny),false,true
+883,Arctovish,false,false
+883,Arctovish (Shiny),false,true
+884,Duraludon,false,false
+884,Duraludon (Shiny),false,true
+884,Duraludon (Gigantamax),false,false,true
+884,Duraludon (Gigantamax Shiny),false,true,true
+885,Dreepy,false,false
+885,Dreepy (Shiny),false,true
+886,Drakloak,false,false
+886,Drakloak (Shiny),false,true
+887,Dragapult,false,false
+887,Dragapult (Shiny),false,true
+888,Zacian,true,false
+888,Zacian (Shiny),true,true
+889,Zamazenta,true,false
+889,Zamazenta (Shiny),true,true
+890,Eternatus,true,false
+890,Eternatus (Shiny),true,true
+891,Kubfu,true,false
+891,Kubfu (Shiny),true,true
+892,Urshifu (Single Strike),true,false
+892,Urshifu (Single Strike Shiny),true,true
+892,Urshifu (Rapid Strike),true,false
+892,Urshifu (Rapid Strike Shiny),true,true
+892,Urshifu (Single Strike Gigantamax),true,false,true
+892,Urshifu (Single Strike Gigantamax Shiny),true,true,true
+892,Urshifu (Rapid Strike Gigantamax),true,false,true
+892,Urshifu (Rapid Strike Gigantamax Shiny),true,true,true
+893,Zarude,true,false
+893,Zarude (Shiny),true,true
+893,Zarude (Dada),true,false
+894,Regieleki,true,false
+894,Regieleki (Shiny),true,true
+895,Regidrago,true,false
+895,Regidrago (Shiny),true,true
+896,Glastrier,true,false
+896,Glastrier (Shiny),true,true
+897,Spectrier,true,false
+897,Spectrier (Shiny),true,true
+898,Calyrex,true,false
+898,Calyrex (Shiny),true,true
+898,Calyrex (Ice Rider),true,false
+898,Calyrex (Ice Rider Shiny),true,true
+898,Calyrex (Shadow Rider),true,false
+898,Calyrex (Shadow Rider Shiny),true,true
+899,Wyrdeer,false,false
+899,Wyrdeer (Shiny),false,true
+900,Kleavor,false,false
+900,Kleavor (Shiny),false,true
+901,Ursaluna,false,false
+901,Ursaluna (Shiny),false,true
+902,Basculegion (Male),false,false
+902,Basculegion (Male Shiny),false,true
+902,Basculegion (Female),false,false
+902,Basculegion (Female Shiny),false,true
+903,Sneasler,false,false
+903,Sneasler (Shiny),false,true
+904,Overqwil,false,false
+904,Overqwil (Shiny),false,true
+905,Enamorus (Incarnate),true,false
+905,Enamorus (Incarnate Shiny),true,true
+905,Enamorus (Therian),true,false
+905,Enamorus (Therian Shiny),true,true
+906,Sprigatito,false,false
+906,Sprigatito (Shiny),false,true
+907,Floragato,false,false
+907,Floragato (Shiny),false,true
+908,Meowscarada,false,false
+908,Meowscarada (Shiny),false,true
+909,Fuecoco,false,false
+909,Fuecoco (Shiny),false,true
+910,Crocalor,false,false
+910,Crocalor (Shiny),false,true
+911,Skeledirge,false,false
+911,Skeledirge (Shiny),false,true
+912,Quaxly,false,false
+912,Quaxly (Shiny),false,true
+913,Quaxwell,false,false
+913,Quaxwell (Shiny),false,true
+914,Quaquaval,false,false
+914,Quaquaval (Shiny),false,true
+915,Lechonk,false,false
+915,Lechonk (Shiny),false,true
+916,Oinkologne (Male),false,false
+916,Oinkologne (Male Shiny),false,true
+916,Oinkologne (Female),false,false
+916,Oinkologne (Female Shiny),false,true
+917,Tarountula,false,false
+917,Tarountula (Shiny),false,true
+918,Spidops,false,false
+918,Spidops (Shiny),false,true
+919,Nymble,false,false
+919,Nymble (Shiny),false,true
+920,Lokix,false,false
+920,Lokix (Shiny),false,true
+921,Pawmi,false,false
+921,Pawmi (Shiny),false,true
+922,Pawmo,false,false
+922,Pawmo (Shiny),false,true
+923,Pawmot,false,false
+923,Pawmot (Shiny),false,true
+924,Tandemaus,false,false
+924,Tandemaus (Shiny),false,true
+925,Maushold (Family of Three),false,false
+925,Maushold (Family of Three Shiny),false,true
+925,Maushold (Family of Four),false,false
+925,Maushold (Family of Four Shiny),false,true
+926,Fidough,false,false
+926,Fidough (Shiny),false,true
+927,Dachsbun,false,false
+927,Dachsbun (Shiny),false,true
+928,Smoliv,false,false
+928,Smoliv (Shiny),false,true
+929,Dolliv,false,false
+929,Dolliv (Shiny),false,true
+930,Arboliva,false,false
+930,Arboliva (Shiny),false,true
+931,Squawkabilly (Green),false,false
+931,Squawkabilly (Green Shiny),false,true
+931,Squawkabilly (Blue),false,false
+931,Squawkabilly (Blue Shiny),false,true
+931,Squawkabilly (Yellow),false,false
+931,Squawkabilly (Yellow Shiny),false,true
+931,Squawkabilly (White),false,false
+931,Squawkabilly (White Shiny),false,true
+932,Nacli,false,false
+932,Nacli (Shiny),false,true
+933,Naclstack,false,false
+933,Naclstack (Shiny),false,true
+934,Garganacl,false,false
+934,Garganacl (Shiny),false,true
+935,Charcadet,false,false
+935,Charcadet (Shiny),false,true
+936,Armarouge,false,false
+936,Armarouge (Shiny),false,true
+937,Ceruledge,false,false
+937,Ceruledge (Shiny),false,true
+938,Tadbulb,false,false
+938,Tadbulb (Shiny),false,true
+939,Bellibolt,false,false
+939,Bellibolt (Shiny),false,true
+940,Wattrel,false,false
+940,Wattrel (Shiny),false,true
+941,Kilowattrel,false,false
+941,Kilowattrel (Shiny),false,true
+942,Maschiff,false,false
+942,Maschiff (Shiny),false,true
+943,Mabosstiff,false,false
+943,Mabosstiff (Shiny),false,true
+944,Shroodle,false,false
+944,Shroodle (Shiny),false,true
+945,Grafaiai,false,false
+945,Grafaiai (Shiny),false,true
+946,Bramblin,false,false
+946,Bramblin (Shiny),false,true
+947,Brambleghast,false,false
+947,Brambleghast (Shiny),false,true
+948,Toedscool,false,false
+948,Toedscool (Shiny),false,true
+949,Toedscruel,false,false
+949,Toedscruel (Shiny),false,true
+950,Klawf,false,false
+950,Klawf (Shiny),false,true
+951,Capsakid,false,false
+951,Capsakid (Shiny),false,true
+952,Scovillain,false,false
+952,Scovillain (Shiny),false,true
+953,Rellor,false,false
+953,Rellor (Shiny),false,true
+954,Rabsca,false,false
+954,Rabsca (Shiny),false,true
+955,Flittle,false,false
+955,Flittle (Shiny),false,true
+956,Espathra,false,false
+956,Espathra (Shiny),false,true
+957,Tinkatink,false,false
+957,Tinkatink (Shiny),false,true
+958,Tinkatuff,false,false
+958,Tinkatuff (Shiny),false,true
+959,Tinkaton,false,false
+959,Tinkaton (Shiny),false,true
+960,Wiglett,false,false
+960,Wiglett (Shiny),false,true
+961,Wugtrio,false,false
+961,Wugtrio (Shiny),false,true
+962,Bombirdier,false,false
+962,Bombirdier (Shiny),false,true
+963,Finizen,false,false
+963,Finizen (Shiny),false,true
+964,Palafin (Zero),false,false
+964,Palafin (Zero Shiny),false,true
+964,Palafin (Hero),false,false
+964,Palafin (Hero Shiny),false,true
+965,Varoom,false,false
+965,Varoom (Shiny),false,true
+966,Revavroom,false,false
+966,Revavroom (Shiny),false,true
+967,Cyclizar,false,false
+967,Cyclizar (Shiny),false,true
+968,Orthworm,false,false
+968,Orthworm (Shiny),false,true
+969,Glimmet,false,false
+969,Glimmet (Shiny),false,true
+970,Glimmora,false,false
+970,Glimmora (Shiny),false,true
+971,Greavard,false,false
+971,Greavard (Shiny),false,true
+972,Houndstone,false,false
+972,Houndstone (Shiny),false,true
+973,Flamigo,false,false
+973,Flamigo (Shiny),false,true
+974,Cetoddle,false,false
+974,Cetoddle (Shiny),false,true
+975,Cetitan,false,false
+975,Cetitan (Shiny),false,true
+976,Veluza,false,false
+976,Veluza (Shiny),false,true
+977,Dondozo,false,false
+977,Dondozo (Shiny),false,true
+978,Tatsugiri (Curly),false,false
+978,Tatsugiri (Curly Shiny),false,true
+978,Tatsugiri (Droopy),false,false
+978,Tatsugiri (Droopy Shiny),false,true
+978,Tatsugiri (Stretchy),false,false
+978,Tatsugiri (Stretchy Shiny),false,true
+979,Annihilape,false,false
+979,Annihilape (Shiny),false,true
+980,Clodsire,false,false
+980,Clodsire (Shiny),false,true
+981,Farigiraf,false,false
+981,Farigiraf (Shiny),false,true
+982,Dudunsparce (Two-Segment),false,false
+982,Dudunsparce (Two-Segment Shiny),false,true
+982,Dudunsparce (Three-Segment),false,false
+982,Dudunsparce (Three-Segment Shiny),false,true
+983,Kingambit,false,false
+983,Kingambit (Shiny),false,true
+984,Great Tusk,false,false
+984,Great Tusk (Shiny),false,true
+985,Scream Tail,false,false
+985,Scream Tail (Shiny),false,true
+986,Brute Bonnet,false,false
+986,Brute Bonnet (Shiny),false,true
+987,Flutter Mane,false,false
+987,Flutter Mane (Shiny),false,true
+988,Slither Wing,false,false
+988,Slither Wing (Shiny),false,true
+989,Sandy Shocks,false,false
+989,Sandy Shocks (Shiny),false,true
+990,Iron Treads,false,false
+990,Iron Treads (Shiny),false,true
+991,Iron Bundle,false,false
+991,Iron Bundle (Shiny),false,true
+992,Iron Hands,false,false
+992,Iron Hands (Shiny),false,true
+993,Iron Jugulis,false,false
+993,Iron Jugulis (Shiny),false,true
+994,Iron Moth,false,false
+994,Iron Moth (Shiny),false,true
+995,Iron Thorns,false,false
+995,Iron Thorns (Shiny),false,true
+996,Frigibax,false,false
+996,Frigibax (Shiny),false,true
+997,Arctibax,false,false
+997,Arctibax (Shiny),false,true
+998,Baxcalibur,false,false
+998,Baxcalibur (Shiny),false,true
+999,Gimmighoul (Chest),false,false
+999,Gimmighoul (Chest Shiny),false,true
+999,Gimmighoul (Roaming),false,false
+999,Gimmighoul (Roaming Shiny),false,true
+1000,Gholdengo,false,false
+1000,Gholdengo (Shiny),false,true
+1001,Wo-Chien,true,false
+1001,Wo-Chien (Shiny),true,true
+1002,Chien-Pao,true,false
+1002,Chien-Pao (Shiny),true,true
+1003,Ting-Lu,true,false
+1003,Ting-Lu (Shiny),true,true
+1004,Chi-Yu,true,false
+1004,Chi-Yu (Shiny),true,true
+1005,Roaring Moon,false,false
+1005,Roaring Moon (Shiny),false,true
+1006,Iron Valiant,false,false
+1006,Iron Valiant (Shiny),false,true
+1007,Koraidon,true,false
+1007,Koraidon (Shiny),true,true
+1008,Miraidon,true,false
+1008,Miraidon (Shiny),true,true`;
+
+
+      async function loadPokemonList() {
+          // Parse the embedded data
+          var itr = 0;
+            const items = pokemonData.split('\n')
+                .filter(line => line.trim() !== '')
+                  .map(line => {
+                    const [dexnum, name, legendary, shiny, gmax] = line.split(',');
+                    itr += 1;
+                    return {
+                        id: itr,
+                        dexnum: dexnum,
+                        name: name,
+                        legendary: legendary === 'true',
+                        shiny: shiny === 'true',
+                        gmax: gmax === 'true'
+                    };
+                  });
+            return items;
+        }
+
+        async function populateDropdowns() {
+            const dropdown1 = document.getElementById('item1');
+            const dropdown2 = document.getElementById('item2');
+            items = await loadPokemonList();
+            window.items = items; // Make items globally available for the calculate function
+            console.log(items);
+            items.forEach(item => {
+                const option1 = new Option(item.name, item.id);
+                const option2 = new Option(item.name, item.id);
+                dropdown1.add(option1);
+                dropdown2.add(option2);
+            });
+
+            updatePokemonImage(dropdown1, 'pokemonImage1');
+            updatePokemonImage(dropdown2, 'pokemonImage2');
+        }
+
+        function updatePokemonImage(selectElement, imageId) {
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            const item = items.find(item => item.id == selectedOption.value);
+            const imageUrl = getImageUrl(item);
+            document.getElementById(imageId).src = imageUrl;
+        }
+
+         function getImageUrlScarletViolet(item) {
+               if (item.shiny) {
+                   return `https://www.serebii.net/Shiny/SV/new/${item.dexnum.padStart(3, '0')}.png`;
+               }
+               return `https://www.serebii.net/scarletviolet/pokemon/new/${item.dexnum.padStart(3, '0')}.png`;
+         }
+
+        function getImageUrl(item) {
+            if (parseInt(item.dexnum) >= 906) {
+                return getImageUrlScarletViolet(item);
+            }
+
+            if (item.shiny) {
+                return `https://www.serebii.net/Shiny/SWSH/${item.dexnum.padStart(3, '0')}${item.gmax ? '-gi' : ''}.png`;
+            }
+            return `https://www.serebii.net/swordshield/pokemon/${item.dexnum.padStart(3, '0')}${item.gmax ? '-gi' : ''}.png`;
+        }
+
+        function getTradeCost(rare, registered, friendship_multiplier) {
+            if (rare && registered) {
+                return 20000 * friendship_multiplier;
+            }
+            if (rare) {
+                return 1000000 * friendship_multiplier;
+            }
+            if (!registered) {
+                return 20000 * friendship_multiplier;
+            }
+            return 100;
+        }
+
+        function calculateTrade() {
+            const item1 = items.find(item => item.id == document.getElementById('item1').value);
+            const item2 = items.find(item => item.id == document.getElementById('item2').value);
+            const friendshipMultiplier = parseFloat(document.getElementById('friendship').value);
+
+            const registeredTrade = document.getElementById('registered1').checked && document.getElementById('registered2').checked;
+            const rareTrade = item1.shiny || item2.shiny || item1.legendary || item2.legendary || item1.gmax || item2.gmax;
+            const specialTrade = !registeredTrade || rareTrade;
+
+            const tradeCost = getTradeCost(rareTrade, registeredTrade, friendshipMultiplier);
+
+            document.getElementById('result').innerHTML = `
+                <strong>Trade Cost:</strong> ${tradeCost.toLocaleString()} stardust<br>
+                <strong>Pokémon Registration:</strong> ${registeredTrade ? 'Yes': 'No'}<br>
+                <strong>Special Trade:</strong> ${specialTrade ? 'Yes': 'No'}
+            `;
+        }
+
+        window.onload = populateDropdowns;
+    </script>
+</body>
+</html>
